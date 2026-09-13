@@ -1,5 +1,4 @@
-ALTER TABLE TB_ARKIVE_DIAGNOSTICO ADD (
-    DS_FONTES_IA CLOB NULL
-);
+ALTER TABLE TB_ARKIVE_DIAGNOSTICO ADD
+    DS_FONTES_IA VARCHAR(MAX) NULL;
 
-COMMENT ON COLUMN TB_ARKIVE_DIAGNOSTICO.DS_FONTES_IA IS 'Fontes consultadas pelo motor clinico externo, serializadas como JSON.';
+-- TB_ARKIVE_DIAGNOSTICO.DS_FONTES_IA: Fontes consultadas pelo motor clinico externo, serializadas como JSON.

@@ -13,7 +13,7 @@ O ArkIve busca reduzir a fragmentação do histórico veterinário. A solução 
 Esta aplicação Spring Boot foi preparada para os requisitos da **FIAP Java Advanced — 3º Sprint**, com ênfase em:
 
 - frontend web e camada de visualização com Thymeleaf;
-- versionamento do banco Oracle com Flyway;
+- versionamento do banco Azure SQL / SQL Server com Flyway;
 - autenticação e autorização com Spring Security;
 - quatro perfis com permissões efetivamente diferentes;
 - dois fluxos funcionais completos além de CRUD;
@@ -22,10 +22,10 @@ Esta aplicação Spring Boot foi preparada para os requisitos da **FIAP Java Adv
 | Requisito da Sprint | Evidência no projeto |
 | --- | --- |
 | Frontend | Controllers MVC, templates Thymeleaf, dashboards, formulários e páginas de consulta de dados |
-| Flyway | Migrations Oracle `V1` a `V6` em `src/main/resources/db/migration` |
+| Flyway | Migrations `V1` a `V6` em `src/main/resources/db/migration`, escritas em T-SQL para Azure SQL / SQL Server |
 | Spring Security | Usuários persistidos, BCrypt, form login, HTTP Basic, quatro perfis e proteção de rotas |
 | Fluxos além de CRUD | Consulta clínica assistida e prescrição com registro de adesão |
-| Validação | Bean Validation, `BindingResult`, regras nos services e constraints Oracle |
+| Validação | Bean Validation, `BindingResult`, regras nos services e constraints do banco (SQL Server / Azure SQL) |
 
 ## Tecnologias
 
@@ -41,14 +41,13 @@ Esta aplicação Spring Boot foi preparada para os requisitos da **FIAP Java Adv
 | Spring Data JPA / Hibernate | Persistência e consultas ao banco |
 | Bean Validation | Validação declarativa de DTOs e formulários |
 | Flyway | Criação e evolução versionada do schema |
-| Oracle Database / `ojdbc11` | Banco da aplicação no perfil padrão `oracle` |
+| Azure SQL Database / SQL Server (`mssql-jdbc`) | Banco da aplicação no perfil padrão `azure` |
 | Maven Wrapper 3.9.15 | Build reproduzível sem instalação manual do Maven |
 | Springdoc OpenAPI 2.8.9 | Documentação complementar da API |
 | Apache PDFBox 3.0.8 | Geração de históricos e resumos clínicos em PDF |
 | Azure Speech SDK 1.51.0 | Transcrição opcional de áudio clínico |
 | FFmpeg | Conversão temporária de M4A, AAC e WebM para WAV na transcrição |
-| Docker | Build em múltiplos estágios e imagem Java 17 com dependências de áudio |
-| JUnit, MockMvc, Spring Security Test e H2 | Testes automatizados sem depender de uma instância Oracle |
+| JUnit, MockMvc, Spring Security Test e H2 | Testes automatizados sem depender de uma instância Azure SQL |
 
 O suporte clínico usa ainda o `RestClient` do Spring para consultar o motor clínico externo configurado por `ARKIVE_CLINICAL_ENGINE_URL`.
 
@@ -66,7 +65,7 @@ Controller MVC + Thymeleaf / REST Controller
 Service + regras de negócio + autorização por escopo
           │
           ▼
-Spring Data Repository ──► JPA/Hibernate ──► Oracle
+Spring Data Repository ──► JPA/Hibernate ──► Azure SQL / SQL Server
           │
           ├──► motor clínico externo
           └──► Azure Speech + FFmpeg (transcrição opcional)
@@ -77,7 +76,7 @@ Spring Data Repository ──► JPA/Hibernate ──► Oracle
 | `controller` | Endpoints REST e controllers web MVC |
 | `service` | Casos de uso, transações, validações e integrações |
 | `repository` | Consultas e persistência com Spring Data JPA |
-| `entity` | Mapeamento das tabelas Oracle |
+| `entity` | Mapeamento das tabelas do banco (Azure SQL / SQL Server) |
 | `dto` | Contratos de entrada, saída e formulários |
 | `security` / `config` | Autenticação, autorização, senha, CORS e integrações |
 | `templates` / `static` | Páginas Thymeleaf, CSS, JavaScript e imagens |
@@ -194,13 +193,13 @@ A aplicação valida dados em camadas complementares:
 - controllers REST e MVC com `@Valid`;
 - formulários MVC com `BindingResult`, retorno à mesma view e mensagens `th:errors`;
 - validações de negócio nos services, como transições de consulta, recursos ativos, propriedade clínica, vínculos, datas de tratamento e imutabilidade da adesão;
-- constraints Oracle para chaves, unicidade, referências, domínios `CHECK`, datas e JSON.
+- constraints do banco para chaves, unicidade, referências, domínios `CHECK`, datas e JSON.
 
 Entradas inválidas da API recebem respostas pelo tratamento centralizado de exceções. Nos formulários web, os valores preenchidos e os erros compreensíveis são apresentados novamente na página.
 
 ## Flyway e banco de dados
 
-O **Flyway controla o versionamento do schema Oracle**. As migrations ficam em `src/main/resources/db/migration` e são aplicadas em ordem durante a inicialização do perfil `oracle`.
+O **Flyway controla o versionamento do schema Azure SQL / SQL Server**. As migrations ficam em `src/main/resources/db/migration`, são escritas em T-SQL e são aplicadas em ordem durante a inicialização do perfil `azure`.
 
 | Versão | Migration | Objetivo |
 | --- | --- | --- |
@@ -211,7 +210,7 @@ O **Flyway controla o versionamento do schema Oracle**. As migrations ficam em `
 | V5 | `V5__add_animal_veterinario_cadastro.sql` | Registra o veterinário que cadastrou o animal, com chave estrangeira e índice |
 | V6 | `V6__add_animal_birth_date_and_consulta_address.sql` | Adiciona data de nascimento do animal e endereço da consulta |
 
-No perfil Oracle:
+No perfil Azure:
 
 - `spring.flyway.enabled=true`;
 - `spring.flyway.locations=classpath:db/migration`;
@@ -227,16 +226,15 @@ As migrations não inserem usuários ou credenciais de demonstração.
 
 - JDK 17 disponível em `JAVA_HOME` ou no `PATH`;
 - acesso à internet no primeiro uso do Maven Wrapper e para baixar dependências;
-- uma instância Oracle e um usuário/schema da aplicação;
+- uma instância Azure SQL Database (ou SQL Server compatível) e um usuário/login da aplicação;
 - acesso ao motor clínico externo para demonstrar a etapa de suporte por IA.
 
-O repositório não fixa uma versão específica do Oracle. A instância deve aceitar os recursos usados nas migrations, como colunas `GENERATED BY DEFAULT AS IDENTITY`, constraints com `IS JSON`, CLOBs, índices e chaves estrangeiras.
+O repositório não fixa uma versão específica do Azure SQL. A instância deve aceitar os recursos usados nas migrations, como colunas `IDENTITY`, `ISJSON`, `VARCHAR(MAX)`, índices e chaves estrangeiras.
 
 ### Opcionais
 
-- Docker, caso a execução seja feita pela imagem do `Dockerfile`;
 - Azure Speech configurado para usar `/api/transcricoes`;
-- FFmpeg no `PATH` para converter áudio M4A, AAC ou WebM em execução local. A imagem Docker já instala o FFmpeg.
+- FFmpeg no `PATH` para converter áudio M4A, AAC ou WebM em execução local.
 
 A narrativa da consulta pode ser enviada como texto sem Azure Speech. Assim, Azure Speech e FFmpeg não são necessários para iniciar a aplicação nem para executar a consulta assistida sem transcrição de áudio.
 
@@ -246,10 +244,10 @@ Nenhum valor real de credencial deve ser versionado. O arquivo `.env.example` se
 
 | Variável | Finalidade | Obrigatória |
 | --- | --- | --- |
-| `SPRING_PROFILES_ACTIVE` | Seleciona o perfil; `oracle` já é o perfil padrão | Não, mas recomendada explicitamente |
-| `ARKIVE_DB_URL` | URL JDBC Oracle | Sim no perfil `oracle` |
-| `ARKIVE_DB_USERNAME` | Usuário/schema Oracle | Sim no perfil `oracle` |
-| `ARKIVE_DB_PASSWORD` | Senha do usuário Oracle | Sim no perfil `oracle` |
+| `SPRING_PROFILES_ACTIVE` | Seleciona o perfil; `azure` já é o perfil padrão | Não, mas recomendada explicitamente |
+| `SPRING_DATASOURCE_URL` | URL JDBC do Azure SQL Database / SQL Server | Sim no perfil `azure` |
+| `SPRING_DATASOURCE_USERNAME` | Usuário/login do Azure SQL | Sim no perfil `azure` |
+| `SPRING_DATASOURCE_PASSWORD` | Senha do usuário do Azure SQL | Sim no perfil `azure` |
 | `ARKIVE_JPA_SHOW_SQL` | Habilita log SQL; padrão `false` | Não |
 | `ARKIVE_CLINICAL_ENGINE_URL` | URL-base do motor clínico externo; existe uma URL padrão configurada | Não, se a URL padrão for usada |
 | `ARKIVE_BOOTSTRAP_SYSADMIN_ENABLED` | Habilita a criação inicial do SysAdmin; padrão `false` | Não |
@@ -262,13 +260,13 @@ Nenhum valor real de credencial deve ser versionado. O arquivo `.env.example` se
 
 ## Configuração inicial do banco
 
-1. Solicite ou crie um usuário/schema Oracle destinado à aplicação.
-2. Conceda a esse usuário permissão de conexão e permissões para criar e evoluir os objetos presentes nas migrations, incluindo tabelas, índices, constraints, chaves estrangeiras e comentários.
-3. Configure `ARKIVE_DB_URL`, `ARKIVE_DB_USERNAME` e `ARKIVE_DB_PASSWORD` fora do repositório.
-4. Inicie a aplicação com o perfil `oracle`.
+1. Provisione um Azure SQL Database (via Azure CLI) e um usuário/login destinado à aplicação.
+2. Conceda a esse usuário permissão de conexão e permissões para criar e evoluir os objetos presentes nas migrations, incluindo tabelas, índices, constraints e chaves estrangeiras.
+3. Configure `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME` e `SPRING_DATASOURCE_PASSWORD` fora do repositório (por exemplo, nas configurações do Azure App Service).
+4. Inicie a aplicação com o perfil `azure`.
 5. O Flyway cria a tabela de histórico e aplica automaticamente as migrations pendentes. O Hibernate valida o resultado antes de a aplicação ficar disponível.
 
-O repositório não define um script de criação do usuário Oracle nem exige comandos DBA específicos. Não é necessário executar as migrations manualmente.
+O repositório não define um script de criação do usuário do banco nem exige comandos DBA específicos. Não é necessário executar as migrations manualmente.
 
 ## Primeiro acesso / criação do SYSADMIN
 
@@ -304,7 +302,7 @@ O `SYSADMIN` criado pelo bootstrap usa a senha definida pelo operador. A troca o
 
 ### Windows / PowerShell
 
-Configure primeiro as variáveis Oracle no ambiente ou na configuração de execução da IDE. Não coloque valores reais no README nem em arquivos versionados.
+Configure primeiro as variáveis do Azure SQL no ambiente ou na configuração de execução da IDE. Não coloque valores reais no README nem em arquivos versionados.
 
 Testes:
 
@@ -318,16 +316,16 @@ Build sem repetir os testes:
 .\mvnw.cmd package -DskipTests
 ```
 
-Execução com Oracle e Flyway:
+Execução com Azure SQL e Flyway:
 
 ```powershell
-.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=oracle"
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=azure"
 ```
 
 Execução do JAR empacotado:
 
 ```powershell
-java -jar target\arkive-0.0.1-SNAPSHOT.jar --spring.profiles.active=oracle
+java -jar target\arkive-0.0.1-SNAPSHOT.jar --spring.profiles.active=azure
 ```
 
 ### Linux / macOS
@@ -335,7 +333,7 @@ java -jar target\arkive-0.0.1-SNAPSHOT.jar --spring.profiles.active=oracle
 ```bash
 ./mvnw test
 ./mvnw package -DskipTests
-./mvnw spring-boot:run -Dspring-boot.run.profiles=oracle
+./mvnw spring-boot:run -Dspring-boot.run.profiles=azure
 ```
 
 O perfil `local-nodb` existe somente para uma inicialização técnica sem banco e desabilita DataSource, JPA e Flyway:
@@ -346,16 +344,7 @@ O perfil `local-nodb` existe somente para uma inicialização técnica sem banco
 
 Esse perfil não permite demonstrar o frontend autenticado nem os fluxos persistidos.
 
-### Docker opcional
-
-O `Dockerfile` compila a aplicação com Java 17 e Maven e gera uma imagem de runtime Java 17 com FFmpeg e bibliotecas do Azure Speech.
-
-```powershell
-docker build -t arkive .
-docker run --rm -p 8080:8080 --env-file .env arkive
-```
-
-Crie o `.env` localmente a partir de `.env.example`, substitua os placeholders e não versione o arquivo com valores reais.
+Esta cópia do projeto (Sprint 3 de DevOps Tools & Cloud Computing) é implantada em Azure App Service sem containers; não há `Dockerfile` neste repositório.
 
 ## Acesso à aplicação
 
@@ -371,10 +360,7 @@ Com a execução local na porta padrão:
 
 Após o login, `/` redireciona `SYSADMIN` para `/sysadmin/dashboard`, `ADMIN_CLINICA` para `/admin/dashboard` e os demais perfis para `/acesso-web-restrito`.
 
-Deploy atual no Render:
-
-- aplicação: [https://arkive-b7v2.onrender.com/](https://arkive-b7v2.onrender.com/)
-- login direto: [https://arkive-b7v2.onrender.com/login](https://arkive-b7v2.onrender.com/login)
+Esta cópia (Sprint 3 de DevOps Tools & Cloud Computing) será implantada em Azure App Service com Azure SQL Database; os recursos Azure ainda não foram provisionados neste repositório. O deploy no Render referido acima pertence ao projeto original `java-advanced`.
 
 O Swagger é documentação complementar para desenvolvimento e demonstração da API; a interface principal para a avaliação web é o frontend Thymeleaf:
 
@@ -400,7 +386,7 @@ Também foi validado o empacotamento em um JAR executável Spring Boot com:
 .\mvnw.cmd package -DskipTests
 ```
 
-Os testes usam H2 e cobrem controllers MVC/REST, Spring Security, ciclo de senha, serviços, autorização clínica, fluxos de consulta, prescrição/adesão, repositories, PDFs, transcrição e integração simulada com o motor clínico. Eles não substituem uma validação manual contra a instância Oracle configurada.
+Os testes usam H2 e cobrem controllers MVC/REST, Spring Security, ciclo de senha, serviços, autorização clínica, fluxos de consulta, prescrição/adesão, repositories, PDFs, transcrição e integração simulada com o motor clínico. Eles não substituem uma validação manual das migrations Flyway contra uma instância real de Azure SQL Database.
 
 
 ## Estrutura do projeto
@@ -436,7 +422,7 @@ Documentação complementar existente:
 - [Arquitetura da solução](docs/arquitetura.md)
 - [Cronograma de desenvolvimento](docs/cronograma-desenvolvimento.md)
 - [Collection Postman](docs/postman/arkive-collection.json)
-- [Modelo de dados Oracle](docs/database/Arkive_modelo_oracle_v6.sql)
+- [Modelo de dados Oracle original](docs/database/Arkive_modelo_oracle_v6.sql) (referência histórica; as migrations em `db/migration` foram convertidas para Azure SQL / SQL Server)
 
 ## Integrantes
 
