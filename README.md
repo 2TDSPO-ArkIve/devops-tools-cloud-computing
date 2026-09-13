@@ -2,6 +2,12 @@
 
 Esta é a entrega da disciplina FIAP DevOps Tools & Cloud Computing — 3º Sprint, uma cópia independente da aplicação Spring Boot ArkIve (originalmente desenvolvida na disciplina Java Advanced), adaptada e reimplantada com uma arquitetura de nuvem provisionada via Azure CLI.
 
+## Vídeo de Demonstração
+
+[https://youtu.be/c46MCNFyOC4](https://youtu.be/c46MCNFyOC4)
+
+Gravação da demonstração final: provisionamento da infraestrutura via Azure CLI, build e deploy manual do JAR, e validação de CRUD diretamente no Azure SQL Database.
+
 ## Descrição da Solução
 
 A ArkIve é uma plataforma de apoio clínico veterinário. A aplicação centraliza dados de animais, responsáveis, clínicas, consultas, diagnósticos, prescrições e adesão ao tratamento, oferecendo uma visão longitudinal da jornada de saúde de cada pet.
@@ -32,9 +38,9 @@ Comunicação entre os componentes:
 - o Web App se conecta ao Azure SQL Database via **JDBC sobre TLS** (`encrypt=true`), usando o driver `mssql-jdbc`;
 - nenhum componente desta arquitetura é containerizado — a aplicação roda como um JAR executável padrão dentro do runtime Java nativo do App Service Linux.
 
-> Diagrama de infraestrutura Azure (a ser adicionado):
->
-> ![Arquitetura Azure do ArkIve](docs/images/arquitetura-azure.png)
+Diagrama de infraestrutura Azure:
+
+![Arquitetura Azure do ArkIve](docs/images/arquitetura-azure.png)
 
 ## Tecnologias Utilizadas
 
@@ -69,11 +75,30 @@ URL pública do App Service
 
 - **Azure SQL Database** é o banco de dados entregue e usado em nuvem (perfil Spring `azure`).
 - **H2** é usado **somente pelos testes automatizados** (`./mvnw test`); não é o banco entregue nem o banco de produção desta Sprint.
-- O **Flyway** é o dono do versionamento e da evolução do schema; as migrations `V1` a `V6` (`src/main/resources/db/migration`) foram reescritas em **T-SQL**, compatíveis com Azure SQL / SQL Server, e devem ser executadas em sequência, do zero, contra um banco Azure SQL vazio.
+- O **Flyway** é o dono do versionamento e da evolução do schema; as migrations `V1` a `V7` (`src/main/resources/db/migration`) foram escritas em **T-SQL**, compatíveis com Azure SQL / SQL Server, e são executadas em sequência contra o Azure SQL Database. `V7` reconcilia a criação de `TB_ARKIVE_ADESAO_PRESCRICAO` (já definida em `V1`) de forma idempotente, sem alterar `V1`–`V6`.
 - O Hibernate usa `spring.jpa.hibernate.ddl-auto=validate`: ele **valida** o schema criado pelo Flyway e nunca cria ou altera tabelas.
-- **Importante:** a configuração **não** usa `spring.flyway.baseline-on-migrate=true`. Um Azure SQL Database recém-provisionado (vazio) deve executar as migrations `V1` a `V6` normalmente, do zero, sem baseline.
-- Um script `script_bd.sql` (deliverável específico da rubrica desta disciplina, com o DDL documentado) será adicionado à raiz do repositório. O Flyway continua sendo o mecanismo real de versionamento em tempo de execução da aplicação; `script_bd.sql` é a documentação/entrega do DDL, não substitui as migrations.
+- A propriedade `spring.jpa.properties.hibernate.hbm2ddl.jdbc_metadata_extraction_strategy=individually` faz o Hibernate consultar os metadados JDBC tabela por tabela ao validar o schema, evitando problemas conhecidos da extração de metadados em lote (`grouped`) contra o driver `mssql-jdbc`/Azure SQL.
+- **Importante:** a configuração **não** usa `spring.flyway.baseline-on-migrate=true`. Um Azure SQL Database recém-provisionado (vazio) executa as migrations `V1` a `V7` normalmente, do zero, sem baseline.
+- `script_bd.sql`, na raiz do repositório, é o deliverável de DDL consolidado exigido pela rubrica desta disciplina (tabelas, colunas, chaves e comentários do schema final após `V1`–`V7`). O Flyway continua sendo o mecanismo real de versionamento em tempo de execução da aplicação; `script_bd.sql` é a documentação/entrega do DDL e não substitui as migrations.
 
+## CRUD Avaliado
+
+A demonstração final usou **Clínica** e **Veterinário** como o par de entidades CORE relacionadas (`TB_ARKIVE_VETERINARIO.ID_CLINICA` referencia `TB_ARKIVE_CLINICA.ID_CLINICA`), com dois registros significativos criados para cada uma.
+
+Roteiro efetivamente demonstrado (endpoints administrativos de `SYSADMIN`):
+
+- **CREATE**: cadastro de uma clínica e, em seguida, de um veterinário vinculado a ela;
+- **READ**: consulta das listagens e detalhes de clínica e veterinário;
+- **UPDATE**: alteração de dados cadastrais de clínica e de veterinário;
+- **DELETE lógico**: exclusão de clínica e de veterinário via `ST_ATIVO = 'N'` — **não** há remoção física de linha para essas duas tabelas (`ClinicaService.excluir` e `VeterinarioService.excluir` fazem `UPDATE ... SET ST_ATIVO = 'N'`, preservando o histórico).
+
+Cada operação foi conferida com `SELECT` direto no Azure SQL Database, confirmando a persistência real na nuvem.
+
+Comportamento adicional demonstrado, decorrente do modelo de acesso:
+
+- ao cadastrar uma clínica, a aplicação provisiona automaticamente a conta de acesso `ADMIN_CLINICA` correspondente (`AccountProvisioningService`);
+- ao cadastrar um veterinário, a aplicação provisiona automaticamente a conta de acesso do próprio veterinário, da mesma forma;
+- a separação de perfis do Spring Security entre `SYSADMIN` (administração global) e `ADMIN_CLINICA` (escopo restrito à própria clínica) foi demonstrada durante o roteiro.
 
 ## Pré-requisitos
 
@@ -95,7 +120,19 @@ export SQL_ADMIN_PASSWORD="<defina-localmente>"
 
 ### Variáveis da aplicação (App Service)
 
+Configuradas via `az webapp config appsettings set` pelo `scripts/04-webapp.sh`:
 
+| Variável | Finalidade | Obrigatória | Segredo |
+| --- | --- | --- | --- |
+| `SPRING_PROFILES_ACTIVE` | Ativa o perfil `azure` (datasource Azure SQL, Flyway, `ddl-auto=validate`) | Sim | Não |
+| `SPRING_DATASOURCE_URL` | URL JDBC do Azure SQL Database | Sim | Não |
+| `SPRING_DATASOURCE_USERNAME` | Login do Azure SQL | Sim | Não |
+| `SPRING_DATASOURCE_PASSWORD` | Senha do Azure SQL | Sim | Sim |
+| `ARKIVE_BOOTSTRAP_SYSADMIN_ENABLED` | Habilita a criação do primeiro SysAdmin no start | Não (padrão `false`) | Não |
+| `ARKIVE_BOOTSTRAP_SYSADMIN_NAME` / `_LOGIN` | Dados do primeiro SysAdmin | Somente se o bootstrap estiver habilitado | Não |
+| `ARKIVE_BOOTSTRAP_SYSADMIN_PASSWORD` | Senha inicial do primeiro SysAdmin | Somente se o bootstrap estiver habilitado | Sim |
+| `AZURE_SPEECH_ENDPOINT` / `AZURE_SPEECH_API_KEY` | Habilita a transcrição de áudio opcional | Não | `_API_KEY` é segredo |
+| `ARKIVE_CLINICAL_ENGINE_URL` | Sobrescreve a URL padrão do motor clínico externo | Não | Não |
 
 ## Provisionamento da Infraestrutura via Azure CLI
 
@@ -192,7 +229,15 @@ az webapp config appsettings set \
 
 O mesmo script aplica, condicionalmente, três blocos opcionais de `az webapp config appsettings set` (motor clínico externo, transcrição Azure Speech e bootstrap do primeiro SysAdmin) — cada um só é executado se as variáveis correspondentes já estiverem definidas no shell (ver seção anterior).
 
+## Build da Aplicação
 
+Build manual local (não é CI/CD; nenhum pipeline dispara este passo) — `scripts/05-deploy.sh`:
+
+```bash
+./mvnw clean package
+```
+
+O comando executa a suíte de testes (H2, sem depender de uma instância Azure SQL) e gera o JAR executável em `target/`. O mesmo script localiza em seguida o JAR Spring Boot reempacotado sob `target/`, excluindo o artefato pré-empacotamento (`*.jar.original`) que o `spring-boot-maven-plugin` preserva.
 
 ## Deploy no Azure App Service
 
@@ -214,18 +259,19 @@ https://webapp-arkive-rm561408.azurewebsites.net
 
 ## Validação da Aplicação e Persistência
 
-Roteiro de validação a ser seguido na demonstração/gravação:
+Roteiro seguido na demonstração/gravação, para o par CORE Clínica + Veterinário (ver [CRUD Avaliado](#crud-avaliado)):
 
-1. acessar a URL pública do App Service;
-2. **CREATE**: criar um registro na primeira tabela CORE (ver [CRUD Avaliado](#crud-avaliado));
-3. verificar com `SELECT` diretamente no Azure SQL que o registro foi persistido;
-4. **READ**: consultar o registro pela aplicação;
-5. **UPDATE**: alterar um campo do registro pela aplicação;
+1. acessar a URL pública do App Service e autenticar como `SYSADMIN`;
+2. **CREATE**: cadastrar uma clínica;
+3. verificar com `SELECT` diretamente no Azure SQL que a clínica foi persistida em `TB_ARKIVE_CLINICA`;
+4. **READ**: consultar a clínica pela aplicação;
+5. **UPDATE**: alterar um campo cadastral da clínica pela aplicação;
 6. verificar com `SELECT` diretamente no Azure SQL que a alteração foi persistida;
-7. **DELETE**: remover o registro pela aplicação;
-8. verificar com `SELECT` diretamente no Azure SQL o resultado da exclusão (remoção física ou `ST_ATIVO = 'N'`, conforme a tabela);
-9. repetir os passos 2–8 para a segunda tabela CORE relacionada;
-10. garantir que pelo menos dois registros significativos foram demonstrados em cada tabela.
+7. **DELETE lógico**: excluir a clínica pela aplicação;
+8. verificar com `SELECT` diretamente no Azure SQL que o resultado é `ST_ATIVO = 'N'` (a linha permanece na tabela; não há remoção física);
+9. repetir os passos 2–8 para Veterinário (`TB_ARKIVE_VETERINARIO`), cadastrando-o vinculado à clínica criada;
+10. confirmar que clínica e veterinário criados provisionaram automaticamente suas contas de acesso (`ADMIN_CLINICA` e do próprio veterinário, respectivamente) e que a separação de perfis `SYSADMIN`/`ADMIN_CLINICA` se aplica;
+11. garantir que pelo menos dois registros significativos foram demonstrados em cada tabela.
 
 ## Exclusão dos Recursos
 
@@ -248,7 +294,7 @@ scripts/
 ├── 05-deploy.sh
 ├── 06-delete-resource-group.sh
 └── env.example.sh
-script_bd.sql            (a adicionar: DDL documentado, entrega da rubrica)
+script_bd.sql            (DDL consolidado documentado, entrega da rubrica)
 src/
 ├── main/
 │   ├── java/br/com/fiap/arkive/
@@ -263,7 +309,7 @@ src/
 │   │   ├── security/
 │   │   └── service/
 │   └── resources/
-│       ├── db/migration/   (V1–V6, T-SQL para Azure SQL)
+│       ├── db/migration/   (V1–V7, T-SQL para Azure SQL)
 │       ├── static/
 │       └── templates/
 └── test/
