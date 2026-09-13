@@ -1,6 +1,22 @@
 /*
  * ArkIve
  * FIAP - DevOps Tools & Cloud Computing - 3o Sprint
+ *
+ * Banco alvo: Azure SQL Database | Dialeto: T-SQL
+ *
+ * Este arquivo documenta o DDL consolidado do schema FINAL da aplicacao apos as
+ * migrations Flyway V1 a V7 (src/main/resources/db/migration). script_bd.sql e a
+ * entrega/documentacao do DDL exigida pela rubrica de DevOps Tools & Cloud
+ * Computing; o Flyway continua sendo o mecanismo real usado pela aplicacao
+ * Spring Boot para criar e evoluir o schema em tempo de execucao
+ * (spring.flyway.enabled=true, ddl-auto=validate). Este script NAO substitui as
+ * migrations Flyway.
+ *
+ * V7 foi adicionada para recriar TB_ARKIVE_ADESAO_PRESCRICAO (ja definida em V1)
+ * apos essa tabela ter sido reportada ausente pela validacao do Hibernate contra
+ * o Azure SQL Database real, com V1-V6 ja aplicadas e imutaveis nesse ponto; V7
+ * so cria a tabela caso ela ainda nao exista, entao o resultado final e
+ * identico ao que V1 ja descrevia.
  * ============================================================================
  * PARTE 1 - CADASTROS E CATALOGOS DE APOIO
  * ----------------------------------------------------------------------------
@@ -481,6 +497,9 @@ CREATE INDEX IX_ARKIVE_PRESC_CONSULTA ON TB_ARKIVE_PRESCRICAO (ID_CONSULTA);
 -- TB_ARKIVE_ADESAO_PRESCRICAO  [CORE]
 -- Registra se uma prescricao foi seguida ou nao, sustentando analises de
 -- adesao terapeutica e abandono de tratamento.
+-- Definida em V1; recriada de forma idempotente por V7 apos ausencia
+-- constatada via validacao do Hibernate no ambiente Azure SQL real
+-- (V1-V6 ja aplicadas e imutaveis nesse ponto). Estrutura identica em ambas.
 -- ============================================================
 CREATE TABLE TB_ARKIVE_ADESAO_PRESCRICAO (
     ID_ADESAO BIGINT IDENTITY(1,1) NOT NULL,            -- Identificador unico do registro de adesao
@@ -736,7 +755,7 @@ CREATE TABLE TB_ARKIVE_LOG_ERRO (
  * ============================================================================
  * FIM DO SCRIPT
  * ----------------------------------------------------------------------------
- * Total de objetos representados (estado final apos V1..V6):
+ * Total de objetos representados (estado final apos V1..V7):
  *   23 tabelas                          (TB_ARKIVE_*)
  *   23 chaves primarias                 (uma por tabela)
  *   48 chaves estrangeiras              (FK_*)
