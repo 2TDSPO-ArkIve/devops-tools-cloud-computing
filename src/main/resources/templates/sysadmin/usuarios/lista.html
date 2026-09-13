@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<div class="page-actions page-actions-only">
+				<a class="button button-primary" th:href="@{/sysadmin/usuarios/novo}">Novo usuário</a>
+			</div>
+
+			<div class="alert alert-success" th:if="${sucesso}" th:text="${sucesso}">Sucesso</div>
+			<div class="alert alert-success" th:if="${loginCriado}">
+				<strong>Primeiro acesso:</strong>
+				<span th:text="${loginCriado}">usuario@arkive.com</span>
+			</div>
+			<div class="alert alert-error" th:if="${erro}" th:text="${erro}">Erro</div>
+			<section class="temporary-password-panel" th:if="${senhaTemporaria}" aria-labelledby="temporary-password-title">
+				<div>
+					<p class="eyebrow">Credencial temporária</p>
+					<h3 id="temporary-password-title">Senha gerada para o usuário <span th:text="${senhaTemporariaUsuarioId}">0</span></h3>
+					<p>Esta senha será exibida apenas agora. O usuário deverá alterá-la no próximo acesso.</p>
+				</div>
+				<code th:text="${senhaTemporaria}">SenhaTemporaria1</code>
+			</section>
+
+			<section class="list-toolbar" aria-label="Filtros de usuários">
+				<form class="filter-form" th:action="@{/sysadmin/usuarios}" method="get" data-auto-filter>
+					<input type="hidden" name="sortField" th:value="${sortField}">
+					<input type="hidden" name="sortDir" th:value="${sortDir}">
+					<label class="sr-only" for="perfil-filter">Perfil do usuário</label>
+					<select id="perfil-filter" name="perfil">
+						<option th:each="filtro : ${filtrosPerfil}"
+						        th:value="${filtro.value}"
+						        th:text="${filtro.label}"
+						        th:selected="${filtro.value == perfilSelecionado}">Todos</option>
+					</select>
+					<a class="button button-secondary button-small" th:href="@{/sysadmin/usuarios}">Limpar filtros</a>
+				</form>
+			</section>
+
+			<section class="empty-state" th:if="${usuarios.empty}">
+				<h3>Nenhum usuário encontrado</h3>
+				<p>Quando houver contas cadastradas, elas aparecerão nesta listagem.</p>
+			</section>
+
+			<section class="table-card" th:unless="${usuarios.empty}">
+				<table class="data-table">
+					<thead>
+					<tr>
+						<th th:with="nextDir=${sortField == 'nome' and sortDir == 'asc' ? 'desc' : 'asc'}">
+							<a class="sort-link" th:classappend="${sortField == 'nome'} ? ' is-active'" th:href="@{/sysadmin/usuarios(perfil=${perfilSelecionado}, sortField='nome', sortDir=${nextDir})}">
+								<span>Nome</span>
+								<span class="sort-indicator" th:if="${sortField == 'nome'}" th:text="${sortDir == 'asc' ? '↑' : '↓'}">↓</span>
+							</a>
+						</th>
+						<th th:with="nextDir=${sortField == 'login' and sortDir == 'asc' ? 'desc' : 'asc'}">
+							<a class="sort-link" th:classappend="${sortField == 'login'} ? ' is-active'" th:href="@{/sysadmin/usuarios(perfil=${perfilSelecionado}, sortField='login', sortDir=${nextDir})}">
+								<span>Login</span>
+								<span class="sort-indicator" th:if="${sortField == 'login'}" th:text="${sortDir == 'asc' ? '↑' : '↓'}">↓</span>
+							</a>
+						</th>
+						<th th:with="nextDir=${sortField == 'perfil' and sortDir == 'asc' ? 'desc' : 'asc'}">
+							<a class="sort-link" th:classappend="${sortField == 'perfil'} ? ' is-active'" th:href="@{/sysadmin/usuarios(perfil=${perfilSelecionado}, sortField='perfil', sortDir=${nextDir})}">
+								<span>Perfil</span>
+								<span class="sort-indicator" th:if="${sortField == 'perfil'}" th:text="${sortDir == 'asc' ? '↑' : '↓'}">↓</span>
+							</a>
+						</th>
+						<th>Vínculo</th>
+						<th th:with="nextDir=${sortField == 'status' and sortDir == 'asc' ? 'desc' : 'asc'}">
+							<a class="sort-link" th:classappend="${sortField == 'status'} ? ' is-active'" th:href="@{/sysadmin/usuarios(perfil=${perfilSelecionado}, sortField='status', sortDir=${nextDir})}">
+								<span>Status</span>
+								<span class="sort-indicator" th:if="${sortField == 'status'}" th:text="${sortDir == 'asc' ? '↑' : '↓'}">↓</span>
+							</a>
+						</th>
+						<th th:with="nextDir=${sortField == 'dataCadastro' and sortDir == 'asc' ? 'desc' : 'asc'}">
+							<a class="sort-link" th:classappend="${sortField == 'dataCadastro'} ? ' is-active'" th:href="@{/sysadmin/usuarios(perfil=${perfilSelecionado}, sortField='dataCadastro', sortDir=${nextDir})}">
+								<span>Data de cadastro</span>
+								<span class="sort-indicator" th:if="${sortField == 'dataCadastro'}" th:text="${sortDir == 'asc' ? '↑' : '↓'}">↓</span>
+							</a>
+						</th>
+						<th>Ações</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="usuario : ${usuarios.content}">
+						<td th:text="${usuario.nome}">Nome</td>
+						<td th:text="${usuario.login}">login@arkive.com</td>
+						<td>
+							<span th:switch="${usuario.tipo.name()}">
+								<span th:case="'SYSADMIN'">SysAdmin</span>
+								<span th:case="'ADMIN_CLINICA'">Administrador da Clínica</span>
+								<span th:case="'VETERINARIO'">Veterinário</span>
+								<span th:case="'RESPONSAVEL'">Responsável</span>
+							</span>
+						</td>
+						<td>
+							<span th:if="${usuario.clinicaNome != null}" th:text="${usuario.clinicaNome}">Clínica</span>
+							<span th:if="${usuario.veterinarioNome != null}" th:text="${usuario.veterinarioNome}">Veterinário</span>
+							<span th:if="${usuario.responsavelNome != null}" th:text="${usuario.responsavelNome}">Responsável</span>
+							<span th:if="${usuario.clinicaNome == null and usuario.veterinarioNome == null and usuario.responsavelNome == null}">Sem vínculo</span>
+						</td>
+						<td>
+							<span class="status-badge status-active" th:if="${usuario.ativo == 'S'}">Ativo</span>
+							<span class="status-badge status-inactive" th:if="${usuario.ativo == 'N'}">Inativo</span>
+						</td>
+						<td th:text="${#temporals.format(usuario.dataCadastro, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</td>
+						<td>
+							<div class="table-actions">
+								<a class="button button-secondary button-small" th:href="@{/sysadmin/usuarios/{id}/editar(id=${usuario.id})}">Editar</a>
+								<form th:action="@{/sysadmin/usuarios/{id}/resetar-senha(id=${usuario.id})}" method="post" onsubmit="return confirm('Resetar a senha deste usuário?');">
+									<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+									<button class="button button-secondary button-small" type="submit">Resetar senha</button>
+								</form>
+							<form th:if="${usuario.ativo == 'S' and usuario.id != currentUserId}" th:action="@{/sysadmin/usuarios/{id}/desativar(id=${usuario.id})}" method="post" onsubmit="return confirm('Desativar este usuário?');">
+								<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+								<button class="button button-danger button-small" type="submit">Desativar</button>
+							</form>
+							<form th:if="${usuario.ativo == 'N'}" th:action="@{/sysadmin/usuarios/{id}/ativar(id=${usuario.id})}" method="post">
+								<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+								<button class="button button-secondary button-small" type="submit">Ativar</button>
+							</form>
+							<span class="muted-action" th:if="${usuario.ativo == 'S' and usuario.id == currentUserId}">Conta atual</span>
+							</div>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<nav class="pagination" th:if="${usuarios.totalPages > 1}" aria-label="Paginação">
+				<a class="button button-secondary" th:if="${usuarios.hasPrevious()}" th:href="@{/sysadmin/usuarios(page=${usuarios.number - 1}, perfil=${perfilSelecionado}, sortField=${sortField}, sortDir=${sortDir})}">Anterior</a>
+				<span th:text="${usuarios.number + 1} + ' de ' + ${usuarios.totalPages}">1 de 1</span>
+				<a class="button button-secondary" th:if="${usuarios.hasNext()}" th:href="@{/sysadmin/usuarios(page=${usuarios.number + 1}, perfil=${perfilSelecionado}, sortField=${sortField}, sortDir=${sortDir})}">Próxima</a>
+			</nav>
+		</main>
+	</div>
+</div>
+</body>
+</html>

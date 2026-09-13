@@ -16,7 +16,7 @@ public record AvaliacaoBemEstarResponse(
 		Long consultaId,
 		LocalDateTime dataAvaliacao,
 		BigDecimal peso,
-		Integer idade,
+		BigDecimal idade,
 		String apetite,
 		String atividade,
 		String comportamento,

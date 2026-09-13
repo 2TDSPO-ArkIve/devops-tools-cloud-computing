@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<div class="page-actions page-actions-only">
+				<a class="button button-primary" th:href="@{/sysadmin/clinicas/nova}">Nova clínica</a>
+			</div>
+
+			<div class="alert alert-success" th:if="${sucesso}" th:text="${sucesso}">Sucesso</div>
+			<div class="alert alert-success" th:if="${primeiroAcesso}" th:text="${primeiroAcesso}">Primeiro acesso</div>
+			<div class="alert alert-error" th:if="${erro}" th:text="${erro}">Erro</div>
+
+			<section class="list-toolbar" aria-label="Filtros de clínicas">
+				<form class="filter-form" th:action="@{/sysadmin/clinicas}" method="get" data-auto-filter>
+					<div class="filter-field-inline">
+						<label for="clinicas-busca">Busca</label>
+						<input id="clinicas-busca" type="search" name="busca" th:value="${busca}" placeholder="Nome, CNPJ ou e-mail" data-filter-search>
+					</div>
+					<div class="filter-field-inline">
+						<label for="clinicas-status">Status</label>
+						<select id="clinicas-status" name="ativo">
+							<option value="" th:selected="${ativoSelecionado == null or ativoSelecionado == ''}">Todos</option>
+							<option value="S" th:selected="${ativoSelecionado == 'S'}">Ativo</option>
+							<option value="N" th:selected="${ativoSelecionado == 'N'}">Inativo</option>
+						</select>
+					</div>
+					<a class="button button-secondary button-small" th:href="@{/sysadmin/clinicas}">Limpar filtros</a>
+				</form>
+			</section>
+
+			<section class="empty-state" th:if="${clinicas.empty}">
+				<h3>Nenhuma clínica cadastrada.</h3>
+			</section>
+
+			<section class="table-card" th:unless="${clinicas.empty}">
+				<table class="data-table">
+					<thead>
+					<tr>
+						<th>Nome</th>
+						<th>CNPJ</th>
+						<th>E-mail</th>
+						<th>Contato</th>
+						<th>Status</th>
+						<th>Ações</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="clinica : ${clinicas.content}">
+						<td th:text="${clinica.nome}">Clínica</td>
+						<td th:text="${clinica.cnpj}">00000000000000</td>
+						<td th:text="${clinica.email}">clinica@arkive.com</td>
+						<td th:text="${clinica.telefone ?: '-'}">Contato</td>
+						<td>
+							<span class="status-badge status-active" th:if="${clinica.ativo == 'S'}">Ativo</span>
+							<span class="status-badge status-inactive" th:if="${clinica.ativo == 'N'}">Inativo</span>
+						</td>
+						<td>
+							<div class="table-actions">
+								<a class="button button-secondary button-small" th:href="@{/sysadmin/clinicas/{id}/editar(id=${clinica.id})}">Editar</a>
+								<form th:if="${clinica.ativo == 'S'}" th:action="@{/sysadmin/clinicas/{id}/desativar(id=${clinica.id})}" method="post" onsubmit="return confirm('Desativar esta clínica?');">
+									<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+									<button class="button button-danger button-small" type="submit">Desativar</button>
+								</form>
+							</div>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<nav class="pagination" th:if="${clinicas.totalPages > 1}" aria-label="Paginação">
+				<a class="button button-secondary" th:if="${clinicas.hasPrevious()}" th:href="@{/sysadmin/clinicas(page=${clinicas.number - 1}, busca=${busca}, ativo=${ativoSelecionado})}">Anterior</a>
+				<span th:text="${clinicas.number + 1} + ' de ' + ${clinicas.totalPages}">1 de 1</span>
+				<a class="button button-secondary" th:if="${clinicas.hasNext()}" th:href="@{/sysadmin/clinicas(page=${clinicas.number + 1}, busca=${busca}, ativo=${ativoSelecionado})}">Próxima</a>
+			</nav>
+		</main>
+	</div>
+</div>
+</body>
+</html>

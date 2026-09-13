@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<div class="page-actions page-actions-only">
+				<a class="button button-primary" th:href="@{/admin/animais/novo}">Novo animal</a>
+			</div>
+
+			<div class="alert alert-success" th:if="${sucesso}" th:text="${sucesso}">Sucesso</div>
+			<div class="alert alert-error" th:if="${erro}" th:text="${erro}">Erro</div>
+
+			<section class="list-toolbar" aria-label="Filtros de animais">
+				<form class="filter-form" th:action="@{/admin/animais}" method="get" data-auto-filter>
+					<div class="filter-field-inline">
+						<label for="animais-nome">Nome</label>
+						<input id="animais-nome" type="search" name="nome" th:value="${nome}" placeholder="Nome do animal" data-filter-search>
+					</div>
+					<div class="filter-field-inline">
+						<label for="animais-especie">Espécie</label>
+						<select id="animais-especie" name="especieId">
+							<option value="" th:selected="${especieSelecionadaId == null}">Todas</option>
+							<option th:each="especie : ${especies}" th:value="${especie.id}" th:text="${especie.nome}" th:selected="${especie.id == especieSelecionadaId}">Espécie</option>
+						</select>
+					</div>
+					<div class="filter-field-inline">
+						<label for="animais-raca">Raça</label>
+						<select id="animais-raca" name="racaId">
+							<option value="" th:selected="${racaSelecionadaId == null}">Todas</option>
+							<option th:each="raca : ${racas}" th:value="${raca.id}" th:text="${raca.nome}" th:selected="${raca.id == racaSelecionadaId}">Raça</option>
+						</select>
+					</div>
+					<div class="filter-field-inline" th:if="${sysadmin}">
+						<label for="animais-clinica">Clínica</label>
+						<select id="animais-clinica" name="clinicaId">
+							<option value="" th:selected="${clinicaSelecionadaId == null}">Todas</option>
+							<option th:each="clinica : ${clinicas}" th:value="${clinica.id}" th:text="${clinica.nome}" th:selected="${clinica.id == clinicaSelecionadaId}">Clínica</option>
+						</select>
+					</div>
+					<div class="filter-field-inline">
+						<label for="animais-status">Status</label>
+						<select id="animais-status" name="ativo">
+							<option value="" th:selected="${ativoSelecionado == null or ativoSelecionado == ''}">Todos</option>
+							<option value="S" th:selected="${ativoSelecionado == 'S'}">Ativo</option>
+							<option value="N" th:selected="${ativoSelecionado == 'N'}">Inativo</option>
+						</select>
+					</div>
+					<a class="button button-secondary button-small" th:href="@{/admin/animais}">Limpar filtros</a>
+				</form>
+			</section>
+
+			<section class="empty-state" th:if="${animais.empty}">
+				<h3>Nenhum animal encontrado.</h3>
+			</section>
+
+			<section class="table-card" th:unless="${animais.empty}">
+				<table class="data-table">
+					<thead>
+					<tr>
+						<th>Nome</th>
+						<th>Espécie</th>
+						<th>Raça</th>
+						<th>Sexo</th>
+						<th>Castrado</th>
+						<th>Clínica</th>
+						<th>Status</th>
+						<th>Ações</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="animal : ${animais.content}">
+						<td th:text="${animal.nome}">Animal</td>
+						<td th:text="${animal.especieNome}">Espécie</td>
+						<td th:text="${animal.racaNome ?: '—'}">Raça</td>
+						<td th:text="${animal.sexo == 'M' ? 'Macho' : (animal.sexo == 'F' ? 'Fêmea' : '—')}">Sexo</td>
+						<td th:text="${animal.castrado == 'S' ? 'Sim' : (animal.castrado == 'N' ? 'Não' : '—')}">Não</td>
+						<td th:text="${animal.clinicaNome ?: '—'}">Clínica</td>
+						<td>
+							<span class="status-badge status-active" th:if="${animal.ativo == 'S'}">Ativo</span>
+							<span class="status-badge status-inactive" th:if="${animal.ativo == 'N'}">Inativo</span>
+						</td>
+						<td>
+							<div class="table-actions">
+								<a class="button button-secondary button-small" th:href="@{/admin/animais/{id}(id=${animal.id})}">Ver</a>
+								<a class="button button-secondary button-small" th:href="@{/admin/animais/{id}/editar(id=${animal.id})}">Editar</a>
+								<form th:if="${animal.ativo == 'S'}" th:action="@{/admin/animais/{id}/desativar(id=${animal.id})}" method="post" th:attr="onsubmit=|return confirm('Tem certeza que deseja desativar o animal ${animal.nome}? O histórico de consultas será preservado.');|">
+									<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+									<button class="button button-danger button-small" type="submit">Desativar</button>
+								</form>
+							</div>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<nav class="pagination" th:if="${animais.totalPages > 1}" aria-label="Paginação">
+				<a class="button button-secondary" th:if="${animais.hasPrevious()}" th:href="@{/admin/animais(page=${animais.number - 1}, nome=${nome}, especieId=${especieSelecionadaId}, racaId=${racaSelecionadaId}, clinicaId=${clinicaSelecionadaId}, ativo=${ativoSelecionado})}">Anterior</a>
+				<span th:text="${animais.number + 1} + ' de ' + ${animais.totalPages}">1 de 1</span>
+				<a class="button button-secondary" th:if="${animais.hasNext()}" th:href="@{/admin/animais(page=${animais.number + 1}, nome=${nome}, especieId=${especieSelecionadaId}, racaId=${racaSelecionadaId}, clinicaId=${clinicaSelecionadaId}, ativo=${ativoSelecionado})}">Próxima</a>
+			</nav>
+		</main>
+	</div>
+</div>
+</body>
+</html>

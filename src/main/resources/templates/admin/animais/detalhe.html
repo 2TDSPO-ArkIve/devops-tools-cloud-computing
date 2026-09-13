@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<div class="page-actions page-actions-only">
+				<a class="button button-secondary" th:href="@{/admin/animais}">Voltar</a>
+				<a class="button button-primary" th:href="@{/admin/animais/{id}/editar(id=${animal.id})}">Editar</a>
+				<form th:if="${animal.ativo == 'S'}" th:action="@{/admin/animais/{id}/desativar(id=${animal.id})}" method="post" th:attr="onsubmit=|return confirm('Tem certeza que deseja desativar o animal ${animal.nome}? O histórico de consultas será preservado.');|">
+					<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+					<button class="button button-danger" type="submit">Desativar</button>
+				</form>
+				<form th:if="${animal.ativo == 'N'}" th:action="@{/admin/animais/{id}/ativar(id=${animal.id})}" method="post">
+					<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+					<button class="button button-secondary" type="submit">Reativar</button>
+				</form>
+			</div>
+
+			<div class="alert alert-success" th:if="${sucesso}" th:text="${sucesso}">Sucesso</div>
+			<div class="alert alert-error" th:if="${erro}" th:text="${erro}">Erro</div>
+
+			<section class="detail-grid" aria-label="Detalhes do animal">
+				<article class="detail-card">
+					<p class="section-label">Animal</p>
+					<dl>
+						<div>
+							<dt>Nome</dt>
+							<dd th:text="${animal.nome}">Bilu</dd>
+						</div>
+						<div>
+							<dt>Status</dt>
+							<dd>
+								<span class="status-badge status-active" th:if="${animal.ativo == 'S'}">Ativo</span>
+								<span class="status-badge status-inactive" th:if="${animal.ativo == 'N'}">Inativo</span>
+							</dd>
+						</div>
+						<div>
+							<dt>Sexo</dt>
+							<dd th:text="${animal.sexo == 'M' ? 'Macho' : (animal.sexo == 'F' ? 'Fêmea' : '—')}">Macho</dd>
+						</div>
+						<div>
+							<dt>Castrado</dt>
+							<dd th:text="${animal.castrado == 'S' ? 'Sim' : (animal.castrado == 'N' ? 'Não' : '—')}">Não</dd>
+						</div>
+					</dl>
+				</article>
+
+				<article class="detail-card">
+					<p class="section-label">Cadastro</p>
+					<dl>
+						<div>
+							<dt>Espécie</dt>
+							<dd th:text="${animal.especieNome}">Cachorro</dd>
+						</div>
+						<div>
+							<dt>Raça</dt>
+							<dd th:text="${animal.racaNome ?: '—'}">Poodle</dd>
+						</div>
+						<div>
+							<dt>Clínica</dt>
+							<dd th:text="${animal.clinicaNome ?: '—'}">Clínica Central</dd>
+						</div>
+					</dl>
+				</article>
+			</section>
+
+			<section class="workflow-panel" aria-label="Responsáveis">
+				<div class="section-heading">
+					<p class="section-label">Responsáveis</p>
+					<h3>Vínculos atuais</h3>
+				</div>
+
+				<section class="detail-grid" th:if="${responsavelPrincipal != null or !outrosResponsaveis.empty}">
+					<article class="detail-card" th:if="${responsavelPrincipal != null}">
+						<p class="section-label">Responsável principal</p>
+						<dl>
+							<div>
+								<dt>Nome</dt>
+								<dd th:text="${responsavelPrincipal.responsavelNome}">Responsável</dd>
+							</div>
+							<div>
+								<dt>Vínculo</dt>
+								<dd th:text="${responsavelPrincipal.tipoVinculo}">TUTOR_LEGAL</dd>
+							</div>
+							<div>
+								<dt>Início</dt>
+								<dd th:text="${responsavelPrincipal.dataInicio != null ? #temporals.format(responsavelPrincipal.dataInicio, 'dd/MM/yyyy') : '—'}">01/01/2026</dd>
+							</div>
+						</dl>
+					</article>
+
+					<article class="detail-card" th:if="${!outrosResponsaveis.empty}">
+						<p class="section-label">Outros responsáveis</p>
+						<dl>
+							<div th:each="responsavel : ${outrosResponsaveis}">
+								<dt th:text="${responsavel.tipoVinculo}">CUIDADOR</dt>
+								<dd>
+									<span th:text="${responsavel.responsavelNome}">Responsável</span>
+									<span th:if="${responsavel.dataInicio != null}" th:text="' desde ' + ${#temporals.format(responsavel.dataInicio, 'dd/MM/yyyy')}"> desde 01/01/2026</span>
+								</dd>
+							</div>
+						</dl>
+					</article>
+				</section>
+
+				<div class="empty-state compact" th:if="${responsavelPrincipal == null and outrosResponsaveis.empty}">
+					<h3>Nenhum responsável ativo vinculado.</h3>
+					<p>O vínculo entre animal e responsável é administrado pelo fluxo de AnimalResponsavel.</p>
+				</div>
+			</section>
+
+			<section class="workflow-panel" aria-label="Histórico de consultas">
+				<div class="section-heading">
+					<p class="section-label">Consultas</p>
+					<h3>Últimos atendimentos</h3>
+				</div>
+				<section class="table-card inline-table" th:if="${!consultas.empty}">
+					<table class="data-table">
+						<thead>
+						<tr>
+							<th>Data</th>
+							<th>Veterinário</th>
+							<th>Modalidade</th>
+							<th>Status</th>
+							<th>Ações</th>
+						</tr>
+						</thead>
+						<tbody>
+						<tr th:each="consulta : ${consultas}">
+							<td th:text="${#temporals.format(consulta.dataHora, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</td>
+							<td th:text="${consulta.veterinarioNome}">Veterinário</td>
+							<td th:text="${consulta.modalidade}">PRESENCIAL</td>
+							<td>
+								<span class="status-badge"
+									  th:classappend="${consulta.status == 'FI'} ? ' status-success' : (${consulta.status == 'CA'} ? ' status-danger' : (${consulta.status == 'EP'} ? ' status-progress' : (${consulta.status == 'AP'} ? ' status-info' : ' status-warning')))"
+									  th:text="${consulta.statusDescricao}">Agendada</span>
+							</td>
+							<td><a class="button button-secondary button-small" th:href="@{/admin/consultas/{id}(id=${consulta.id})}">Ver</a></td>
+						</tr>
+						</tbody>
+					</table>
+				</section>
+				<div class="empty-state compact" th:if="${consultas.empty}">
+					<h3>Nenhuma consulta registrada.</h3>
+				</div>
+			</section>
+		</main>
+	</div>
+</div>
+</body>
+</html>

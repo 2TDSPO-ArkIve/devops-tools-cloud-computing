@@ -36,6 +36,10 @@ public class Diagnostico {
 	@Column(name = "DS_INSIGHT_IA")
 	private String insightIa;
 
+	@Lob
+	@Column(name = "DS_FONTES_IA")
+	private String fontesIaJson;
+
 	@Column(name = "PC_CONFIANCA", precision = 5, scale = 2)
 	private BigDecimal confianca;
 
@@ -88,6 +92,14 @@ public class Diagnostico {
 
 	public void setInsightIa(String insightIa) {
 		this.insightIa = insightIa;
+	}
+
+	public String getFontesIaJson() {
+		return fontesIaJson;
+	}
+
+	public void setFontesIaJson(String fontesIaJson) {
+		this.fontesIaJson = fontesIaJson;
 	}
 
 	public BigDecimal getConfianca() {

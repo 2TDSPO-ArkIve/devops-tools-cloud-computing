@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<div class="alert alert-error" th:if="${erro}" th:text="${erro}">Erro</div>
+
+			<section class="empty-state" th:if="${adesoes.empty}">
+				<h3>Nenhum registro de adesão encontrado.</h3>
+			</section>
+
+			<section class="table-card" th:unless="${adesoes.empty}">
+				<table class="data-table">
+					<thead>
+					<tr>
+						<th>Data</th>
+						<th>Animal</th>
+						<th>Responsável</th>
+						<th>Prescrição</th>
+						<th>Tomou</th>
+						<th>Ações</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="adesao : ${adesoes.content}">
+						<td th:text="${#temporals.format(adesao.dataRegistro, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</td>
+						<td th:text="${adesao.animalNome}">Animal</td>
+						<td th:text="${adesao.responsavelNome ?: '-'}">Responsável</td>
+						<td th:text="${adesao.prescricaoId}">1</td>
+						<td>
+							<span class="status-badge status-success" th:if="${adesao.tomou == 'S'}">Sim</span>
+							<span class="status-badge status-warning" th:if="${adesao.tomou == 'N'}">Não</span>
+						</td>
+						<td>
+							<a class="button button-secondary button-small" th:href="@{/admin/adesoes/{id}(id=${adesao.id})}">Ver</a>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<nav class="pagination" th:if="${adesoes.totalPages > 1}" aria-label="Paginação">
+				<a class="button button-secondary" th:if="${adesoes.hasPrevious()}" th:href="@{/admin/adesoes(page=${adesoes.number - 1})}">Anterior</a>
+				<span th:text="${adesoes.number + 1} + ' de ' + ${adesoes.totalPages}">1 de 1</span>
+				<a class="button button-secondary" th:if="${adesoes.hasNext()}" th:href="@{/admin/adesoes(page=${adesoes.number + 1})}">Próxima</a>
+			</nav>
+		</main>
+	</div>
+</div>
+</body>
+</html>

@@ -2,6 +2,7 @@ package br.com.fiap.arkive.service;
 
 import br.com.fiap.arkive.dto.request.ResponsavelRequest;
 import br.com.fiap.arkive.dto.response.ResponsavelResponse;
+import br.com.fiap.arkive.dto.response.ResponsavelLookupResponse;
 import br.com.fiap.arkive.entity.Responsavel;
 import br.com.fiap.arkive.exception.BusinessException;
 import br.com.fiap.arkive.exception.ResourceNotFoundException;
@@ -9,10 +10,13 @@ import br.com.fiap.arkive.repository.ResponsavelRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Service
@@ -34,6 +38,23 @@ public class ResponsavelService {
 		this.responsavelRepository = responsavelRepository;
 	}
 
+	public List<String> listarTipos() {
+		return TIPOS.stream().sorted().toList();
+	}
+
+	@Transactional(readOnly = true)
+	public Page<ResponsavelLookupResponse> buscarParaVinculo(String busca, Pageable pageable) {
+		String texto = busca == null ? "" : busca.trim();
+		if (texto.length() < 3 || texto.length() > 200) {
+			throw new BusinessException("Informe de 3 a 200 caracteres do nome ou o email do responsavel.");
+		}
+		Pageable limitado = PageRequest.of(pageable.isPaged() ? pageable.getPageNumber() : 0,
+				pageable.isPaged() ? Math.min(pageable.getPageSize(), 20) : 20,
+				Sort.by("nome").and(Sort.by("id")));
+		return responsavelRepository.buscarParaVinculo(texto, limitado)
+				.map(ResponsavelLookupResponse::fromEntity);
+	}
+
 	@Transactional
 	public ResponsavelResponse criar(ResponsavelRequest request) {
 		Responsavel responsavel = new Responsavel();
@@ -49,6 +70,16 @@ public class ResponsavelService {
 				vazioParaNulo(nome),
 				vazioParaNulo(documento),
 				vazioParaNulo(tipo),
+				vazioParaNulo(ativo),
+				pageable
+		).map(ResponsavelResponse::fromEntity);
+	}
+
+	@Transactional(readOnly = true)
+	public Page<ResponsavelResponse> listarPorTexto(String busca, String ativo, Pageable pageable) {
+		validarSNQuandoInformado(ativo, "Ativo");
+		return responsavelRepository.buscarPorTexto(
+				vazioParaNulo(busca),
 				vazioParaNulo(ativo),
 				pageable
 		).map(ResponsavelResponse::fromEntity);

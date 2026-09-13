@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<section class="kpi-grid" aria-label="Indicadores da clínica">
+				<article class="kpi-card" th:each="kpi : ${kpis}">
+					<p class="kpi-label" th:text="${kpi.label}">Indicador</p>
+					<strong th:if="${kpi.count != null}" th:text="${kpi.count}">0</strong>
+					<strong th:unless="${kpi.count != null}">-</strong>
+					<p th:text="${kpi.description}">Resumo operacional da clínica.</p>
+				</article>
+			</section>
+
+			<section class="card-grid quick-access-grid" aria-label="Acessos da clínica">
+				<article class="info-card" th:each="item : ${quickAccess}">
+					<h3 th:text="${item.label}">Animais</h3>
+					<strong th:if="${item.count != null}" th:text="${item.count}">0</strong>
+					<p th:text="${item.description}">Resumo</p>
+					<a class="button button-primary button-small" th:href="@{${item.href}}">Acessar</a>
+				</article>
+			</section>
+		</main>
+	</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+<aside class="sidebar" th:fragment="sidebar">
+	<a class="brand" th:href="@{/}">
+		<img class="brand-logo" th:src="@{/images/definitive.png}" alt="">
+		<span class="brand-wordmark">ArkIve</span>
+	</a>
+
+	<nav class="nav" aria-label="Navegacao administrativa">
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'SysAdmin' and pageTitle == 'Visão Geral'} ? ' is-active'"
+		   th:href="@{/sysadmin/dashboard}"
+		   sec:authorize="hasRole('SYSADMIN')">Visão Geral</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'SysAdmin' and (pageTitle == 'Usuários' or pageTitle == 'Novo usuário' or pageTitle == 'Editar usuário')} ? ' is-active'"
+		   th:href="@{/sysadmin/usuarios}"
+		   sec:authorize="hasRole('SYSADMIN')">Usuários</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'SysAdmin' and (pageTitle == 'Clínicas' or pageTitle == 'Nova clínica' or pageTitle == 'Editar clínica')} ? ' is-active'"
+		   th:href="@{/sysadmin/clinicas}"
+		   sec:authorize="hasRole('SYSADMIN')">Clínicas</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'SysAdmin' and (pageTitle == 'Veterinários' or pageTitle == 'Novo veterinário' or pageTitle == 'Editar veterinário')} ? ' is-active'"
+		   th:href="@{/sysadmin/veterinarios}"
+		   sec:authorize="hasRole('SYSADMIN')">Veterinários</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'SysAdmin' and (pageTitle == 'Responsáveis' or pageTitle == 'Novo responsável' or pageTitle == 'Editar responsável')} ? ' is-active'"
+		   th:href="@{/sysadmin/responsaveis}"
+		   sec:authorize="hasRole('SYSADMIN')">Responsáveis</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'SysAdmin' and (pageTitle == 'Animais' or pageTitle == 'Animal' or pageTitle == 'Novo animal' or pageTitle == 'Editar animal')} ? ' is-active'"
+		   th:href="@{/admin/animais}"
+		   sec:authorize="hasRole('SYSADMIN')">Animais</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'Administrador da Clínica' and pageTitle == 'Visão Geral'} ? ' is-active'"
+		   th:href="@{/admin/dashboard}"
+		   sec:authorize="hasRole('ADMIN_CLINICA')">Visão Geral</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'Administrador da Clínica' and (pageTitle == 'Animais' or pageTitle == 'Animal' or pageTitle == 'Novo animal' or pageTitle == 'Editar animal')} ? ' is-active'"
+		   th:href="@{/admin/animais}"
+		   sec:authorize="hasRole('ADMIN_CLINICA')">Animais</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'Administrador da Clínica' and (pageTitle == 'Consultas' or pageTitle == 'Consulta')} ? ' is-active'"
+		   th:href="@{/admin/consultas}"
+		   sec:authorize="hasRole('ADMIN_CLINICA')">Consultas</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'Administrador da Clínica' and (pageTitle == 'Prescrições' or pageTitle == 'Prescrição')} ? ' is-active'"
+		   th:href="@{/admin/prescricoes}"
+		   sec:authorize="hasRole('ADMIN_CLINICA')">Prescrições</a>
+		<a class="nav-link"
+		   th:classappend="${roleLabel == 'Administrador da Clínica' and pageTitle == 'Adesão'} ? ' is-active'"
+		   th:href="@{/admin/adesoes}"
+		   sec:authorize="hasRole('ADMIN_CLINICA')">Adesão</a>
+	</nav>
+
+	<div class="sidebar-account">
+		<div class="sidebar-user-copy">
+			<strong th:text="${displayName}">ArkIve SysAdmin</strong>
+			<span th:text="${roleLabel}">SysAdmin</span>
+		</div>
+		<form th:action="@{/logout}" method="post">
+			<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+			<button class="sidebar-logout" type="submit">Sair</button>
+		</form>
+	</div>
+</aside>
+</body>
+</html>

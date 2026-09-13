@@ -21,7 +21,7 @@ public class Responsavel {
 	@Column(name = "NM_RESPONSAVEL", nullable = false, length = 50)
 	private String nome;
 
-	@Column(name = "DC_CPF_RG", length = 20, unique = true)
+	@Column(name = "DC_CPF_RG", nullable = false, length = 20, unique = true)
 	private String documento;
 
 	@Column(name = "DS_EMAIL", length = 200)

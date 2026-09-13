@@ -9,15 +9,19 @@ import br.com.fiap.arkive.exception.BusinessException;
 import br.com.fiap.arkive.exception.ResourceNotFoundException;
 import br.com.fiap.arkive.repository.DiagnosticoRepository;
 import br.com.fiap.arkive.repository.DoencaRepository;
+import br.com.fiap.arkive.security.UsuarioPrincipal;
 import org.springframework.context.annotation.Profile;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Service
@@ -29,15 +33,18 @@ public class DiagnosticoService {
 	private final DiagnosticoRepository diagnosticoRepository;
 	private final ConsultaService consultaService;
 	private final DoencaRepository doencaRepository;
+	private final ClinicalAccessService clinicalAccessService;
 
 	public DiagnosticoService(
 			DiagnosticoRepository diagnosticoRepository,
 			ConsultaService consultaService,
-			DoencaRepository doencaRepository
+			DoencaRepository doencaRepository,
+			ClinicalAccessService clinicalAccessService
 	) {
 		this.diagnosticoRepository = diagnosticoRepository;
 		this.consultaService = consultaService;
 		this.doencaRepository = doencaRepository;
+		this.clinicalAccessService = clinicalAccessService;
 	}
 
 	@Transactional
@@ -45,6 +52,83 @@ public class DiagnosticoService {
 		Diagnostico diagnostico = new Diagnostico();
 		aplicarDados(diagnostico, request, true);
 		return DiagnosticoResponse.fromEntity(diagnosticoRepository.save(diagnostico));
+	}
+
+	@Transactional
+	public DiagnosticoResponse criar(DiagnosticoRequest request, UsuarioPrincipal principal) {
+		Diagnostico diagnostico = new Diagnostico();
+		aplicarDados(diagnostico, request, true);
+		clinicalAccessService.exigirEscritaDiagnosticoVeterinario(principal, diagnostico);
+		return DiagnosticoResponse.fromEntity(diagnosticoRepository.save(diagnostico));
+	}
+
+	public Diagnostico criarConfirmadoPeloVeterinario(
+			Consulta consulta,
+			String diagnosticoTexto,
+			String severidade,
+			Long doencaId
+	) {
+		if (diagnosticoTexto == null || diagnosticoTexto.isBlank()) {
+			throw new BusinessException("Informe o diagnostico para finalizar a consulta.");
+		}
+		validarSeveridadeQuandoInformada(severidade);
+		Doenca doenca = doencaId == null ? null : buscarDoenca(doencaId);
+		Diagnostico diagnostico = new Diagnostico();
+		diagnostico.setDiagnostico(diagnosticoTexto);
+		diagnostico.setSeveridade(severidade);
+		diagnostico.setConfirmado("S");
+		diagnostico.setValidacaoVet("S");
+		diagnostico.setConsulta(consulta);
+		diagnostico.setDoenca(doenca);
+		return diagnosticoRepository.save(diagnostico);
+	}
+
+	public Diagnostico criarSuporteClinicoIa(
+			Consulta consulta,
+			String diagnosticoTexto,
+			String severidade,
+			String insightIa,
+			Integer confianca
+	) {
+		return criarSuporteClinicoIa(consulta, diagnosticoTexto, severidade, insightIa, confianca, null);
+	}
+
+	public Diagnostico criarSuporteClinicoIa(
+			Consulta consulta,
+			String diagnosticoTexto,
+			String severidade,
+			String insightIa,
+			Integer confianca,
+			String fontesIaJson
+	) {
+		if (diagnosticoTexto == null || diagnosticoTexto.isBlank()) {
+			throw new BusinessException("Resposta invalida do motor clinico.", HttpStatus.BAD_GATEWAY);
+		}
+		validarSeveridadeQuandoInformada(severidade);
+		if (insightIa == null || insightIa.isBlank()) {
+			throw new BusinessException("Resposta invalida do motor clinico.", HttpStatus.BAD_GATEWAY);
+		}
+		if (confianca == null || confianca < 0 || confianca > 100) {
+			throw new BusinessException("Resposta invalida do motor clinico.", HttpStatus.BAD_GATEWAY);
+		}
+		Diagnostico diagnostico = new Diagnostico();
+		diagnostico.setDiagnostico(diagnosticoTexto);
+		diagnostico.setSeveridade(severidade);
+		diagnostico.setInsightIa(insightIa);
+		diagnostico.setFontesIaJson(fontesIaJson);
+		diagnostico.setConfianca(BigDecimal.valueOf(confianca));
+		diagnostico.setConfirmado("N");
+		diagnostico.setValidacaoVet("N");
+		diagnostico.setConsulta(consulta);
+		diagnostico.setDoenca(null);
+		return diagnosticoRepository.save(diagnostico);
+	}
+
+	@Transactional(readOnly = true)
+	public Diagnostico buscarSuporteClinico(Long consultaId) {
+		return diagnosticoRepository.buscarSuportesClinicos(consultaId, PageRequest.of(0, 1)).stream()
+				.findFirst()
+				.orElseThrow(() -> new ResourceNotFoundException("Suporte clinico ainda nao gerado para esta consulta."));
 	}
 
 	@Transactional(readOnly = true)
@@ -56,14 +140,74 @@ public class DiagnosticoService {
 	}
 
 	@Transactional(readOnly = true)
+	public Page<DiagnosticoResponse> listarAutorizado(
+			Long consultaId,
+			Long doencaId,
+			String severidade,
+			String confirmado,
+			Pageable pageable,
+			UsuarioPrincipal principal
+	) {
+		if (principal == null) {
+			throw new AccessDeniedException("Usuario autenticado invalido.");
+		}
+		validarSeveridadeQuandoInformada(severidade);
+		validarSNQuandoInformado(confirmado, "Confirmado");
+		return switch (principal.getTipoUsuario()) {
+			case SYSADMIN -> diagnosticoRepository.buscar(consultaId, doencaId, vazioParaNulo(severidade), vazioParaNulo(confirmado), pageable)
+					.map(DiagnosticoResponse::fromEntity);
+			case VETERINARIO -> principal.getVeterinarioId() == null ? Page.empty(pageable) : diagnosticoRepository.buscarParaVeterinario(
+					principal.getVeterinarioId(),
+					consultaId,
+					doencaId,
+					vazioParaNulo(severidade),
+					vazioParaNulo(confirmado),
+					pageable
+			).map(DiagnosticoResponse::fromEntity);
+			case RESPONSAVEL -> diagnosticoRepository.buscarParaResponsavel(
+					principal.getResponsavelId(),
+					LocalDate.now(),
+					consultaId,
+					doencaId,
+					vazioParaNulo(severidade),
+					vazioParaNulo(confirmado),
+					pageable
+			).map(DiagnosticoResponse::fromEntity);
+			case ADMIN_CLINICA -> principal.getClinicaId() == null ? Page.empty(pageable) : diagnosticoRepository.buscarParaClinica(
+					principal.getClinicaId(),
+					consultaId,
+					doencaId,
+					vazioParaNulo(severidade),
+					vazioParaNulo(confirmado),
+					pageable
+			).map(DiagnosticoResponse::fromEntity);
+		};
+	}
+
+	@Transactional(readOnly = true)
 	public DiagnosticoResponse buscarPorId(Long id) {
 		return DiagnosticoResponse.fromEntity(buscarEntidade(id));
+	}
+
+	@Transactional(readOnly = true)
+	public DiagnosticoResponse buscarPorIdAutorizado(Long id, UsuarioPrincipal principal) {
+		Diagnostico diagnostico = buscarEntidade(id);
+		clinicalAccessService.exigirLeituraDiagnostico(principal, diagnostico);
+		return DiagnosticoResponse.fromEntity(diagnostico);
 	}
 
 	@Transactional
 	public DiagnosticoResponse atualizar(Long id, DiagnosticoRequest request) {
 		Diagnostico diagnostico = buscarEntidade(id);
 		aplicarDados(diagnostico, request, false);
+		return DiagnosticoResponse.fromEntity(diagnosticoRepository.save(diagnostico));
+	}
+
+	@Transactional
+	public DiagnosticoResponse atualizar(Long id, DiagnosticoRequest request, UsuarioPrincipal principal) {
+		Diagnostico diagnostico = buscarEntidade(id);
+		aplicarDados(diagnostico, request, false);
+		clinicalAccessService.exigirEscritaDiagnosticoVeterinario(principal, diagnostico);
 		return DiagnosticoResponse.fromEntity(diagnosticoRepository.save(diagnostico));
 	}
 
@@ -78,27 +222,43 @@ public class DiagnosticoService {
 		}
 	}
 
+	@Transactional
+	public void excluir(Long id, UsuarioPrincipal principal) {
+		Diagnostico diagnostico = buscarEntidade(id);
+		clinicalAccessService.exigirEscritaDiagnosticoVeterinario(principal, diagnostico);
+		try {
+			diagnosticoRepository.delete(diagnostico);
+			diagnosticoRepository.flush();
+		} catch (DataIntegrityViolationException ex) {
+			throw new BusinessException("Diagnostico nao pode ser excluido porque esta em uso.", HttpStatus.CONFLICT);
+		}
+	}
+
 	private Diagnostico buscarEntidade(Long id) {
 		return diagnosticoRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Diagnostico nao encontrado."));
 	}
 
 	private void aplicarDados(Diagnostico diagnostico, DiagnosticoRequest request, boolean criando) {
-		String confirmado = criando && request.confirmado() == null ? "S" : request.confirmado();
+		validarCamposControladosPeloServidor(request);
 		validarSeveridadeQuandoInformada(request.severidade());
-		validarSNQuandoInformado(confirmado, "Confirmado");
-		validarSNQuandoInformado(request.validacaoVet(), "Validacao vet");
-		validarConfianca(request.confianca());
 		Consulta consulta = consultaService.buscarEntidade(request.consultaId());
 		Doenca doenca = request.doencaId() == null ? null : buscarDoenca(request.doencaId());
 		diagnostico.setDiagnostico(request.diagnostico());
 		diagnostico.setSeveridade(request.severidade());
-		diagnostico.setConfirmado(confirmado == null ? diagnostico.getConfirmado() : confirmado);
-		diagnostico.setInsightIa(request.insightIa());
-		diagnostico.setConfianca(request.confianca());
-		diagnostico.setValidacaoVet(request.validacaoVet());
+		if (criando) {
+			diagnostico.setConfirmado("N");
+			diagnostico.setValidacaoVet("N");
+		}
 		diagnostico.setConsulta(consulta);
 		diagnostico.setDoenca(doenca);
+	}
+
+	private void validarCamposControladosPeloServidor(DiagnosticoRequest request) {
+		if (request.confirmado() != null || request.validacaoVet() != null
+				|| request.insightIa() != null || request.confianca() != null) {
+			throw new BusinessException("Campos de IA, confianca, confirmacao e validacao veterinaria sao controlados pelo servidor.");
+		}
 	}
 
 	private Doenca buscarDoenca(Long id) {

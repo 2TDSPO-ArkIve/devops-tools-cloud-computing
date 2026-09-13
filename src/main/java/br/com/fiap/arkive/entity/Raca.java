@@ -19,7 +19,7 @@ public class Raca {
 	@Column(name = "ID_RACA")
 	private Long id;
 
-	@Column(name = "NM_RACA", nullable = false, length = 100)
+	@Column(name = "NM_RACA", nullable = false, length = 50)
 	private String nome;
 
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)

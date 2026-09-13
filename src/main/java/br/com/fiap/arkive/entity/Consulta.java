@@ -18,6 +18,17 @@ import java.time.LocalDateTime;
 @Table(name = "TB_ARKIVE_CONSULTA")
 public class Consulta {
 
+	@Column(name = "DS_ENDERECO", length = 255)
+	private String endereco;
+
+	public String getEndereco() {
+		return endereco;
+	}
+
+	public void setEndereco(String endereco) {
+		this.endereco = endereco;
+	}
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID_CONSULTA")
@@ -41,7 +52,7 @@ public class Consulta {
 	@Column(name = "DS_OBSERVACAO")
 	private String observacao;
 
-	@Column(name = "KG_PESO", precision = 5, scale = 2)
+	@Column(name = "KG_PESO", precision = 6, scale = 2)
 	private BigDecimal peso;
 
 	@Lob

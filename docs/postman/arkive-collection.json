@@ -1,0 +1,1403 @@
+{
+  "info": {
+    "_postman_id": "c9285999-54c2-489e-9cbe-e558220d0475",
+    "name": "ArkIve — Sprint 3 Java Advanced",
+    "description": "Coleção de apoio à demonstração da aplicação ArkIve. As requisições herdam HTTP Basic da coleção; informe apenas credenciais de teste locais nas variáveis username e password. Altere o usuário conforme o perfil exigido por cada operação. Os IDs devem corresponder aos registros do banco usado na demonstração.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      {
+        "key": "username",
+        "value": "{{username}}",
+        "type": "string"
+      },
+      {
+        "key": "password",
+        "value": "{{password}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "00 - Autenticação e saúde",
+      "description": "Verificações iniciais. Health e cadastro público não usam autenticação; os demais itens herdam HTTP Basic.",
+      "item": [
+        {
+          "name": "GET Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Cadastro público de veterinário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/register",
+            "description": "Solicita o cadastro público conforme o fluxo implementado pelo AuthController.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Ana Veterinária\",\n  \"crmv\": \"SP12345\",\n  \"email\": \"ana.vet@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Usuário autenticado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Alterar senha",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/auth/change-password",
+            "description": "Use somente uma senha de teste. A coleção não armazena credenciais reais.",
+            "body": {
+              "mode": "raw",
+          "raw": "{\n  \"novaSenha\": \"{{novaSenha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 - Administração e cadastros",
+      "description": "Operações administrativas. Administração de clínicas e veterinários exige SYSADMIN; responsáveis e catálogos seguem a matriz de autorização da aplicação.",
+      "item": [
+        {
+          "name": "POST Criar clínica",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clinicas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Clínica Veterinária ArkIve\",\n  \"cnpj\": \"12345678000199\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"telefone\": \"11999999999\",\n  \"email\": \"contato.clinica@example.com\",\n  \"ativo\": \"S\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar clínicas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clinicas"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar clínica",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clinicas/{{clinicaId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Atualizar clínica",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/clinicas/{{clinicaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Clínica Veterinária ArkIve\",\n  \"cnpj\": \"12345678000199\",\n  \"endereco\": \"Avenida Paulista, 1000\",\n  \"telefone\": \"11999999999\",\n  \"email\": \"contato.clinica@example.com\",\n  \"ativo\": \"S\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Desativar clínica",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/clinicas/{{clinicaId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar veterinário",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/veterinarios",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Dra. Ana Veterinária\",\n  \"crmv\": \"SP12345\",\n  \"especialidade\": \"Clínica geral\",\n  \"email\": \"ana.vet@example.com\",\n  \"clinicaId\": {{clinicaId}},\n  \"ativo\": \"S\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar veterinários",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/veterinarios"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar veterinário",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/veterinarios/{{veterinarioId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Atualizar veterinário",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/veterinarios/{{veterinarioId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Dra. Ana Veterinária\",\n  \"crmv\": \"SP12345\",\n  \"especialidade\": \"Clínica geral\",\n  \"email\": \"ana.vet@example.com\",\n  \"clinicaId\": {{clinicaId}},\n  \"ativo\": \"S\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Desativar veterinário",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/veterinarios/{{veterinarioId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar responsável",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/responsaveis",
+            "body": {
+              "mode": "raw",
+          "raw": "{\n  \"nome\": \"Maria Responsável\",\n  \"documento\": \"12345678901\",\n  \"email\": \"maria.responsavel@example.com\",\n  \"telefone\": \"11988888888\",\n  \"tipo\": \"TUTOR\",\n  \"dataCadastro\": \"2026-09-12\",\n  \"notificacao\": \"S\",\n  \"ativo\": \"S\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar responsáveis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/responsaveis"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar responsável",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/responsaveis/{{responsavelId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar responsável por documento ou e-mail",
+          "request": {
+            "method": "GET",
+            "header": [],
+          "url": "{{baseUrl}}/api/responsaveis/busca?busca=Maria"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Atualizar responsável",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/responsaveis/{{responsavelId}}",
+            "body": {
+              "mode": "raw",
+          "raw": "{\n  \"nome\": \"Maria Responsável\",\n  \"documento\": \"12345678901\",\n  \"email\": \"maria.responsavel@example.com\",\n  \"telefone\": \"11988888888\",\n  \"tipo\": \"TUTOR\",\n  \"dataCadastro\": \"2026-09-12\",\n  \"notificacao\": \"S\",\n  \"ativo\": \"S\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Desativar responsável",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/responsaveis/{{responsavelId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar espécie",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/especies",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Canina\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar espécies",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/especies"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar espécie",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/especies/{{especieId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Atualizar espécie",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/especies/{{especieId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Canina\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Excluir espécie",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/especies/{{especieId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar raça",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/racas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Labrador Retriever\",\n  \"especieId\": {{especieId}},\n  \"porte\": \"GRANDE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar raças",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/racas"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar raça",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/racas/{{racaId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Atualizar raça",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/racas/{{racaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Labrador Retriever\",\n  \"especieId\": {{especieId}},\n  \"porte\": \"GRANDE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Excluir raça",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/racas/{{racaId}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Animais e vínculos",
+      "description": "Cadastro e leitura de animais e manutenção do vínculo histórico entre animal e responsável.",
+      "item": [
+        {
+          "name": "POST Criar animal",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/animais",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Luna\",\n  \"especieId\": {{especieId}},\n  \"racaId\": {{racaId}},\n  \"sexo\": \"F\",\n  \"castrado\": \"S\",\n  \"clinicaId\": {{clinicaId}},\n  \"ativo\": \"S\",\n  \"dataNascimento\": \"2021-04-15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar animais",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar animal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais/{{animalId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Atualizar animal",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/animais/{{animalId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Luna\",\n  \"especieId\": {{especieId}},\n  \"racaId\": {{racaId}},\n  \"sexo\": \"F\",\n  \"castrado\": \"S\",\n  \"clinicaId\": {{clinicaId}},\n  \"ativo\": \"S\",\n  \"dataNascimento\": \"2021-04-15\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Desativar animal",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais/{{animalId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Animais da clínica autenticada",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais/clinica"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Meus animais",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais/me"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Histórico do animal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais/{{animalId}}/historico"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Histórico do animal em PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais/{{animalId}}/historico-pdf"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar vínculo animal-responsável",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/animais-responsaveis",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animalId\": {{animalId}},\n  \"responsavelId\": {{responsavelId}},\n  \"tipoVinculo\": \"TUTOR\",\n  \"dataInicio\": \"2026-09-12\",\n  \"dataFim\": null,\n  \"principal\": \"S\",\n  \"ativo\": \"S\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar vínculos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais-responsaveis"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Vínculos por animal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais-responsaveis/animal/{{animalId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Vínculos por responsável",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais-responsaveis/responsavel/{{responsavelId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Atualizar vínculo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/animais-responsaveis",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animalId\": {{animalId}},\n  \"responsavelId\": {{responsavelId}},\n  \"tipoVinculo\": \"TUTOR\",\n  \"dataInicio\": \"2026-09-12\",\n  \"dataFim\": null,\n  \"principal\": \"S\",\n  \"ativo\": \"S\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Encerrar vínculo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/animais-responsaveis/encerrar",
+            "description": "O endpoint recebe AnimalResponsavelRequest no corpo JSON.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animalId\": {{animalId}},\n  \"responsavelId\": {{responsavelId}},\n  \"tipoVinculo\": \"TUTOR\",\n  \"dataInicio\": \"2026-09-12\",\n  \"dataFim\": \"2026-12-31\",\n  \"principal\": \"S\",\n  \"ativo\": \"N\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE Excluir vínculo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/animais-responsaveis?animalId={{animalId}}&responsavelId={{responsavelId}}&dataInicio=2026-09-12"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Fluxo 1 — Consulta clínica assistida",
+      "description": "Sequência principal para VETERINARIO: criar a consulta, iniciar, registrar narrativa, solicitar e consultar apoio clínico provisório e finalizar com a conclusão do veterinário. O cancelamento é uma alternativa e não deve ser executado na mesma sequência.",
+      "item": [
+        {
+          "name": "01 POST Criar consulta (AG)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/consultas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataHora\": \"2026-09-12T10:00:00\",\n  \"modalidade\": \"PRESENCIAL\",\n  \"motivo\": \"Apatia e redução de apetite\",\n  \"sintomas\": \"Apatia há dois dias\",\n  \"observacao\": \"Primeira avaliação\",\n  \"peso\": 18.5,\n  \"transcricao\": null,\n  \"status\": \"AG\",\n  \"animalId\": {{animalId}},\n  \"veterinarioId\": {{veterinarioId}},\n  \"clinicaId\": {{clinicaId}},\n  \"endereco\": \"Unidade principal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 GET Listar consultas acessíveis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/consultas"
+          },
+          "response": []
+        },
+        {
+          "name": "03 GET Buscar consulta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/consultas/{{consultaId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "04 PUT Ajustar consulta agendada",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/consultas/{{consultaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataHora\": \"2026-09-12T10:00:00\",\n  \"modalidade\": \"PRESENCIAL\",\n  \"motivo\": \"Apatia e redução de apetite\",\n  \"sintomas\": \"Apatia há dois dias\",\n  \"observacao\": \"Primeira avaliação\",\n  \"peso\": 18.5,\n  \"transcricao\": null,\n  \"status\": \"AG\",\n  \"animalId\": {{animalId}},\n  \"veterinarioId\": {{veterinarioId}},\n  \"clinicaId\": {{clinicaId}},\n  \"endereco\": \"Unidade principal\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 POST Iniciar consulta (EP)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/consultas/{{consultaId}}/iniciar"
+          },
+          "response": []
+        },
+        {
+          "name": "06 PATCH Registrar narrativa",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/consultas/{{consultaId}}/narrativa",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"narrativa\": \"Animal com apatia e redução do apetite há dois dias.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "07 POST Gerar suporte clínico (AP)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/consultas/{{consultaId}}/suporte-clinico",
+            "description": "Aciona o motor clínico externo e persiste apoio provisório. Requer integração configurada."
+          },
+          "response": []
+        },
+        {
+          "name": "08 GET Consultar suporte clínico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/consultas/{{consultaId}}/suporte-clinico"
+          },
+          "response": []
+        },
+        {
+          "name": "09 POST Finalizar com conclusão veterinária (FI)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/consultas/{{consultaId}}/finalizar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"diagnostico\": \"Conclusão clínica definida pelo veterinário\",\n  \"severidade\": \"MODERADA\",\n  \"doencaId\": null,\n  \"conclusao\": \"Conduta definida após avaliação do caso e do apoio provisório.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "10 GET Resumo da consulta em PDF",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/consultas/{{consultaId}}/resumo-pdf"
+          },
+          "response": []
+        },
+        {
+          "name": "Alternativa POST Cancelar consulta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/consultas/{{consultaId}}/cancelar",
+            "description": "Ramo alternativo ao fluxo principal.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Cancelamento solicitado antes da finalização.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Fluxo 2 — Prescrição e adesão",
+      "description": "Após uma consulta FI, o VETERINARIO cria a prescrição. Para registrar a adesão, troque username/password para um RESPONSAVEL vinculado ao animal da consulta.",
+      "item": [
+        {
+          "name": "01 POST Criar prescrição",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/prescricoes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medicamento\": \"Medicamento definido pelo veterinário\",\n  \"dosagem\": \"1 comprimido\",\n  \"frequencia\": \"12/12h\",\n  \"viaAdministracao\": \"ORAL\",\n  \"dataInicio\": \"2026-09-12\",\n  \"dataFim\": \"2026-09-19\",\n  \"instrucoes\": \"Administrar com alimento.\",\n  \"consultaId\": {{consultaId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "02 GET Listar prescrições acessíveis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/prescricoes"
+          },
+          "response": []
+        },
+        {
+          "name": "03 GET Buscar prescrição",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/prescricoes/{{prescricaoId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "04 PUT Atualizar prescrição",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/prescricoes/{{prescricaoId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medicamento\": \"Medicamento definido pelo veterinário\",\n  \"dosagem\": \"1 comprimido\",\n  \"frequencia\": \"12/12h\",\n  \"viaAdministracao\": \"ORAL\",\n  \"dataInicio\": \"2026-09-12\",\n  \"dataFim\": \"2026-09-19\",\n  \"instrucoes\": \"Administrar com alimento.\",\n  \"consultaId\": {{consultaId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 POST Registrar adesão como responsável",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/adesoes-prescricao",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prescricaoId\": {{prescricaoId}},\n  \"tomou\": \"S\",\n  \"observacao\": \"Dose administrada conforme orientação.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "06 GET Listar adesões acessíveis",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/adesoes-prescricao"
+          },
+          "response": []
+        },
+        {
+          "name": "07 GET Buscar adesão",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/adesoes-prescricao/{{adesaoId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Alternativa DELETE Excluir prescrição",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "description": "Operação administrativa opcional; não execute antes de demonstrar a adesão.",
+            "url": "{{baseUrl}}/api/prescricoes/{{prescricaoId}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Apoio ao domínio e integrações",
+      "description": "Recursos complementares do domínio veterinário. Use um perfil autorizado conforme a matriz de segurança da aplicação.",
+      "item": [
+        {
+          "name": "GET Listar diagnósticos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/diagnosticos"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Buscar diagnóstico",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/diagnosticos/{{diagnosticoId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar avaliação de bem-estar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/avaliacoes-bem-estar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animalId\": {{animalId}},\n  \"responsavelId\": {{responsavelId}},\n  \"veterinarioId\": {{veterinarioId}},\n  \"consultaId\": {{consultaId}},\n  \"dataAvaliacao\": \"2026-09-12T10:15:00\",\n  \"peso\": 18.5,\n  \"idade\": 5,\n  \"apetite\": \"NORMAL\",\n  \"atividade\": \"REDUZIDA\",\n  \"comportamento\": \"APÁTICO\",\n  \"observacao\": \"Avaliação registrada durante a consulta.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar avaliações de bem-estar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/avaliacoes-bem-estar"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar protocolo preventivo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/protocolos-preventivos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Vacinação anual\",\n  \"tipo\": \"VACINA\",\n  \"descricao\": \"Protocolo preventivo anual.\",\n  \"intervalo\": 365,\n  \"idadeMin\": 3,\n  \"especieId\": {{especieId}},\n  \"racaId\": {{racaId}},\n  \"ativo\": \"S\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar protocolos preventivos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/protocolos-preventivos"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar evento preventivo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/eventos-preventivos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataAplicacao\": \"2026-09-12\",\n  \"dataProximo\": \"2027-09-12\",\n  \"status\": \"REALIZADO\",\n  \"alerta\": \"S\",\n  \"observacao\": \"Aplicação registrada.\",\n  \"animalId\": {{animalId}},\n  \"protocoloId\": {{protocoloId}},\n  \"consultaId\": {{consultaId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar eventos preventivos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/eventos-preventivos"
+          },
+          "response": []
+        },
+        {
+          "name": "PUT Atualizar evento preventivo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/eventos-preventivos/{{eventoPreventivoId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"dataAplicacao\": \"2026-09-12\",\n  \"dataProximo\": \"2027-09-12\",\n  \"status\": \"REALIZADO\",\n  \"alerta\": \"S\",\n  \"observacao\": \"Aplicação registrada.\",\n  \"animalId\": {{animalId}},\n  \"protocoloId\": {{protocoloId}},\n  \"consultaId\": {{consultaId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST Criar alerta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/alertas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"RETORNO\",\n  \"mensagem\": \"Retorno clínico recomendado.\",\n  \"dataEnvio\": \"2026-09-12T11:00:00\",\n  \"dataLeitura\": null,\n  \"status\": \"ENVIADO\",\n  \"canal\": \"APP\",\n  \"animalId\": {{animalId}},\n  \"responsavelId\": {{responsavelId}},\n  \"clinicaId\": {{clinicaId}},\n  \"eventoPreventivoId\": {{eventoPreventivoId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar alertas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alertas"
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Marcar alerta como lido",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/alertas/{{alertaId}}/ler"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Registrar feedback NPS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/feedbacks-nps",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"responsavelId\": {{responsavelId}},\n  \"animalId\": {{animalId}},\n  \"clinicaId\": {{clinicaId}},\n  \"veterinarioId\": {{veterinarioId}},\n  \"consultaId\": {{consultaId}},\n  \"nota\": 5,\n  \"comentario\": \"Atendimento bem conduzido.\",\n  \"dataFeedback\": \"2026-09-12T12:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar feedbacks NPS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/feedbacks-nps"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Registrar evento de jornada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": "{{baseUrl}}/api/eventos-jornada",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoEvento\": \"OBSERVACAO_CLINICA\",\n  \"origem\": \"API\",\n  \"ator\": \"VETERINARIO\",\n  \"responsavelId\": {{responsavelId}},\n  \"veterinarioId\": {{veterinarioId}},\n  \"animalId\": {{animalId}},\n  \"clinicaId\": {{clinicaId}},\n  \"canal\": \"WEB\",\n  \"contexto\": \"Registro complementar da demonstração.\",\n  \"payloadJson\": \"{\\\"origem\\\":\\\"postman\\\"}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET Listar eventos de jornada",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/eventos-jornada"
+          },
+          "response": []
+        },
+        {
+          "name": "GET Timeline do animal",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/eventos-jornada/animal/{{animalId}}/timeline"
+          },
+          "response": []
+        },
+        {
+          "name": "POST Transcrever áudio",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/transcricoes",
+            "description": "Requer Azure Speech e FFmpeg quando o formato precisar de conversão.",
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "audio",
+                  "type": "file",
+                  "src": []
+                },
+                {
+                  "key": "idioma",
+                  "value": "pt-BR",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "username",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "novaSenha",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "clinicaId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "veterinarioId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "responsavelId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "especieId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "racaId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "animalId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "consultaId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "prescricaoId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "adesaoId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "diagnosticoId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "protocoloId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "eventoPreventivoId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "alertaId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}

@@ -6,6 +6,9 @@ import br.com.fiap.arkive.entity.Animal;
 import br.com.fiap.arkive.entity.AnimalResponsavel;
 import br.com.fiap.arkive.entity.AnimalResponsavelId;
 import br.com.fiap.arkive.entity.Responsavel;
+import br.com.fiap.arkive.entity.TipoUsuario;
+import br.com.fiap.arkive.security.UsuarioPrincipal;
+import org.springframework.security.access.AccessDeniedException;
 import br.com.fiap.arkive.exception.BusinessException;
 import br.com.fiap.arkive.exception.ResourceNotFoundException;
 import br.com.fiap.arkive.repository.AnimalRepository;
@@ -37,29 +40,35 @@ public class AnimalResponsavelService {
 	private final AnimalRepository animalRepository;
 	private final ResponsavelRepository responsavelRepository;
 	private final EventoJornadaService eventoJornadaService;
+	private final ClinicalAccessService clinicalAccessService;
 
 	public AnimalResponsavelService(
 			AnimalResponsavelRepository animalResponsavelRepository,
 			AnimalRepository animalRepository,
 			ResponsavelRepository responsavelRepository,
-			EventoJornadaService eventoJornadaService
+			EventoJornadaService eventoJornadaService,
+			ClinicalAccessService clinicalAccessService
 	) {
 		this.animalResponsavelRepository = animalResponsavelRepository;
 		this.animalRepository = animalRepository;
 		this.responsavelRepository = responsavelRepository;
 		this.eventoJornadaService = eventoJornadaService;
+		this.clinicalAccessService = clinicalAccessService;
 	}
 
 	@Transactional
-	public AnimalResponsavelResponse criar(AnimalResponsavelRequest request) {
+	public AnimalResponsavelResponse criar(AnimalResponsavelRequest request, UsuarioPrincipal principal) {
+		Animal animal = autorizarEscrita(request.animalId(), principal);
 		LocalDate dataInicio = request.dataInicio() == null ? LocalDate.now() : request.dataInicio();
 		AnimalResponsavelId id = criarId(request.animalId(), request.responsavelId(), dataInicio);
 		if (animalResponsavelRepository.existsById(id)) {
 			throw new BusinessException("Vinculo entre animal, responsavel e data de inicio ja existe.");
 		}
 
-		Animal animal = buscarAnimal(request.animalId());
 		Responsavel responsavel = buscarResponsavel(request.responsavelId());
+		if (!"S".equals(responsavel.getAtivo())) {
+			throw new BusinessException("Responsavel deve estar ativo.");
+		}
 		AnimalResponsavel animalResponsavel = new AnimalResponsavel();
 		animalResponsavel.setId(id);
 		animalResponsavel.setAnimal(animal);
@@ -69,9 +78,9 @@ public class AnimalResponsavelService {
 		AnimalResponsavel salvo = animalResponsavelRepository.save(animalResponsavel);
 		eventoJornadaService.registrarEvento(
 				"RESPONSAVEL_VINCULADO",
-				"RESPONSAVEL",
-				responsavel.getId(),
+				TipoUsuario.VETERINARIO.equals(principal.getTipoUsuario()) ? "VETERINARIO" : "SISTEMA",
 				null,
+				principal.getVeterinarioId(),
 				animal.getId(),
 				null,
 				"Responsavel vinculado ao animal.",
@@ -81,7 +90,19 @@ public class AnimalResponsavelService {
 	}
 
 	@Transactional(readOnly = true)
-	public Page<AnimalResponsavelResponse> listar(Long animalId, Long responsavelId, String tipoVinculo, String ativo, Pageable pageable) {
+	public Page<AnimalResponsavelResponse> listar(Long animalId, Long responsavelId, String tipoVinculo, String ativo, Pageable pageable, UsuarioPrincipal principal) {
+		exigirPrincipal(principal);
+		if (TipoUsuario.RESPONSAVEL.equals(principal.getTipoUsuario())) {
+			if (principal.getResponsavelId() == null || (responsavelId != null && !responsavelId.equals(principal.getResponsavelId()))) {
+				throw new AccessDeniedException("Responsavel nao autorizado.");
+			}
+			responsavelId = principal.getResponsavelId();
+		} else if (!TipoUsuario.SYSADMIN.equals(principal.getTipoUsuario()) && animalId == null) {
+			throw new BusinessException("Informe animalId para consultar os vinculos do paciente.");
+		}
+		if (animalId != null) {
+			clinicalAccessService.exigirLeituraAnimal(principal, buscarAnimal(animalId));
+		}
 		validarTipoQuandoInformado(tipoVinculo);
 		validarSNQuandoInformado(ativo, "Ativo");
 		return animalResponsavelRepository.buscar(animalId, responsavelId, vazioParaNulo(tipoVinculo), vazioParaNulo(ativo), pageable)
@@ -89,22 +110,31 @@ public class AnimalResponsavelService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<AnimalResponsavelResponse> listarAtivosPorAnimal(Long animalId) {
-		buscarAnimal(animalId);
+	public List<AnimalResponsavelResponse> listarAtivosPorAnimal(Long animalId, UsuarioPrincipal principal) {
+		clinicalAccessService.exigirLeituraAnimal(principal, buscarAnimal(animalId));
+		LocalDate hoje = LocalDate.now();
 		return animalResponsavelRepository.listarPorAnimalEAtivo(animalId, "S").stream()
+				.filter(ar -> !ar.getId().getDataInicio().isAfter(hoje)
+						&& (ar.getDataFim() == null || !ar.getDataFim().isBefore(hoje)))
 				.map(AnimalResponsavelResponse::fromEntity)
 				.toList();
 	}
 
 	@Transactional(readOnly = true)
-	public Page<AnimalResponsavelResponse> listarPorResponsavel(Long responsavelId, Pageable pageable) {
+	public Page<AnimalResponsavelResponse> listarPorResponsavel(Long responsavelId, Pageable pageable, UsuarioPrincipal principal) {
+		exigirPrincipal(principal);
+		if (!TipoUsuario.SYSADMIN.equals(principal.getTipoUsuario())
+				&& !(TipoUsuario.RESPONSAVEL.equals(principal.getTipoUsuario()) && responsavelId.equals(principal.getResponsavelId()))) {
+			throw new AccessDeniedException("Consulte vinculos pelo animal autorizado.");
+		}
 		buscarResponsavel(responsavelId);
 		return animalResponsavelRepository.listarPorResponsavel(responsavelId, pageable)
 				.map(AnimalResponsavelResponse::fromEntity);
 	}
 
 	@Transactional
-	public AnimalResponsavelResponse atualizar(AnimalResponsavelRequest request) {
+	public AnimalResponsavelResponse atualizar(AnimalResponsavelRequest request, UsuarioPrincipal principal) {
+		autorizarEscrita(request.animalId(), principal);
 		LocalDate dataInicio = validarDataInicioObrigatoria(request.dataInicio());
 		AnimalResponsavel animalResponsavel = buscarEntidade(request.animalId(), request.responsavelId(), dataInicio);
 		aplicarDados(animalResponsavel, request, dataInicio, false);
@@ -113,7 +143,8 @@ public class AnimalResponsavelService {
 	}
 
 	@Transactional
-	public AnimalResponsavelResponse encerrar(AnimalResponsavelRequest request) {
+	public AnimalResponsavelResponse encerrar(AnimalResponsavelRequest request, UsuarioPrincipal principal) {
+		autorizarEscrita(request.animalId(), principal);
 		LocalDate dataInicio = validarDataInicioObrigatoria(request.dataInicio());
 		if (request.dataFim() == null) {
 			throw new BusinessException("Data fim deve ser informada para encerrar o vinculo.");
@@ -126,7 +157,8 @@ public class AnimalResponsavelService {
 	}
 
 	@Transactional
-	public void excluir(Long animalId, Long responsavelId, LocalDate dataInicio) {
+	public void excluir(Long animalId, Long responsavelId, LocalDate dataInicio, UsuarioPrincipal principal) {
+		autorizarEscrita(animalId, principal);
 		AnimalResponsavel animalResponsavel = buscarEntidade(animalId, responsavelId, dataInicio);
 		animalResponsavel.setAtivo("N");
 		animalResponsavelRepository.save(animalResponsavel);
@@ -140,6 +172,21 @@ public class AnimalResponsavelService {
 	private Animal buscarAnimal(Long animalId) {
 		return animalRepository.findById(animalId)
 				.orElseThrow(() -> new ResourceNotFoundException("Animal nao encontrado."));
+	}
+
+	private Animal autorizarEscrita(Long animalId, UsuarioPrincipal principal) {
+		clinicalAccessService.exigirGestaoVinculosAnimal(principal, buscarAnimal(animalId));
+		// Serialize all relationship changes for this animal, including the first principal.
+		Animal animal = animalRepository.buscarParaAtualizarVinculos(animalId)
+				.orElseThrow(() -> new ResourceNotFoundException("Animal nao encontrado."));
+		clinicalAccessService.exigirGestaoVinculosAnimal(principal, animal);
+		return animal;
+	}
+
+	private void exigirPrincipal(UsuarioPrincipal principal) {
+		if (principal == null) {
+			throw new AccessDeniedException("Usuario autenticado invalido.");
+		}
 	}
 
 	private Responsavel buscarResponsavel(Long responsavelId) {

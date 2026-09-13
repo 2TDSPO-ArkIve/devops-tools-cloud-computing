@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<form class="form form-card" th:action="@{/sysadmin/responsaveis}" th:object="${responsavel}" method="post" novalidate>
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+				<div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Erro</div>
+
+				<section class="form-section" aria-labelledby="dados-responsavel-title">
+					<p class="section-label" id="dados-responsavel-title">Dados do responsável</p>
+
+					<div class="field">
+						<label for="nome">Nome</label>
+						<input id="nome" type="text" th:field="*{nome}" th:attr="aria-invalid=${#fields.hasErrors('nome')}" required>
+						<span class="field-error" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="documento">CPF/RG</label>
+						<input id="documento" type="text" th:field="*{documento}" th:attr="aria-invalid=${#fields.hasErrors('documento')}" maxlength="20" required>
+						<span class="field-error" th:if="${#fields.hasErrors('documento')}" th:errors="*{documento}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="email">E-mail</label>
+						<input id="email" type="email" th:field="*{email}" th:attr="aria-invalid=${#fields.hasErrors('email')}" maxlength="200">
+						<span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="telefone">Contato</label>
+						<input id="telefone" type="text" th:field="*{telefone}" th:attr="aria-invalid=${#fields.hasErrors('telefone')}" maxlength="20">
+						<span class="field-error" th:if="${#fields.hasErrors('telefone')}" th:errors="*{telefone}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="tipo">Tipo</label>
+						<select id="tipo" th:field="*{tipo}" th:attr="aria-invalid=${#fields.hasErrors('tipo')}" required>
+							<option value="">Selecione...</option>
+							<option th:each="tipo : ${tiposResponsavel}" th:value="${tipo}" th:text="${tipo}">TUTOR</option>
+						</select>
+						<span class="field-error" th:if="${#fields.hasErrors('tipo')}" th:errors="*{tipo}">Erro</span>
+					</div>
+				</section>
+
+				<div class="form-actions">
+					<a class="button button-secondary" th:href="@{/sysadmin/responsaveis}">Cancelar</a>
+					<button class="button button-primary" type="submit">Cadastrar responsável</button>
+				</div>
+			</form>
+		</main>
+	</div>
+</div>
+</body>
+</html>

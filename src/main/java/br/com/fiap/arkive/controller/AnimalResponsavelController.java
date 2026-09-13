@@ -3,6 +3,8 @@ package br.com.fiap.arkive.controller;
 import br.com.fiap.arkive.dto.request.AnimalResponsavelRequest;
 import br.com.fiap.arkive.dto.response.AnimalResponsavelResponse;
 import br.com.fiap.arkive.service.AnimalResponsavelService;
+import br.com.fiap.arkive.security.UsuarioPrincipal;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import jakarta.validation.Valid;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
@@ -35,8 +37,8 @@ public class AnimalResponsavelController {
 	}
 
 	@PostMapping
-	public ResponseEntity<AnimalResponsavelResponse> criar(@Valid @RequestBody AnimalResponsavelRequest request) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(animalResponsavelService.criar(request));
+	public ResponseEntity<AnimalResponsavelResponse> criar(@Valid @RequestBody AnimalResponsavelRequest request, @AuthenticationPrincipal UsuarioPrincipal principal) {
+		return ResponseEntity.status(HttpStatus.CREATED).body(animalResponsavelService.criar(request, principal));
 	}
 
 	@GetMapping
@@ -45,38 +47,40 @@ public class AnimalResponsavelController {
 			@RequestParam(required = false) Long responsavelId,
 			@RequestParam(required = false) String tipoVinculo,
 			@RequestParam(required = false) String ativo,
-			Pageable pageable
+			Pageable pageable,
+			@AuthenticationPrincipal UsuarioPrincipal principal
 	) {
-		return animalResponsavelService.listar(animalId, responsavelId, tipoVinculo, ativo, pageable);
+		return animalResponsavelService.listar(animalId, responsavelId, tipoVinculo, ativo, pageable, principal);
 	}
 
 	@GetMapping("/animal/{animalId}")
-	public List<AnimalResponsavelResponse> listarAtivosPorAnimal(@PathVariable Long animalId) {
-		return animalResponsavelService.listarAtivosPorAnimal(animalId);
+	public List<AnimalResponsavelResponse> listarAtivosPorAnimal(@PathVariable Long animalId, @AuthenticationPrincipal UsuarioPrincipal principal) {
+		return animalResponsavelService.listarAtivosPorAnimal(animalId, principal);
 	}
 
 	@GetMapping("/responsavel/{responsavelId}")
-	public Page<AnimalResponsavelResponse> listarPorResponsavel(@PathVariable Long responsavelId, Pageable pageable) {
-		return animalResponsavelService.listarPorResponsavel(responsavelId, pageable);
+	public Page<AnimalResponsavelResponse> listarPorResponsavel(@PathVariable Long responsavelId, Pageable pageable, @AuthenticationPrincipal UsuarioPrincipal principal) {
+		return animalResponsavelService.listarPorResponsavel(responsavelId, pageable, principal);
 	}
 
 	@PutMapping
-	public AnimalResponsavelResponse atualizar(@Valid @RequestBody AnimalResponsavelRequest request) {
-		return animalResponsavelService.atualizar(request);
+	public AnimalResponsavelResponse atualizar(@Valid @RequestBody AnimalResponsavelRequest request, @AuthenticationPrincipal UsuarioPrincipal principal) {
+		return animalResponsavelService.atualizar(request, principal);
 	}
 
 	@PatchMapping("/encerrar")
-	public AnimalResponsavelResponse encerrar(@Valid @RequestBody AnimalResponsavelRequest request) {
-		return animalResponsavelService.encerrar(request);
+	public AnimalResponsavelResponse encerrar(@Valid @RequestBody AnimalResponsavelRequest request, @AuthenticationPrincipal UsuarioPrincipal principal) {
+		return animalResponsavelService.encerrar(request, principal);
 	}
 
 	@DeleteMapping
 	public ResponseEntity<Void> excluir(
 			@RequestParam Long animalId,
 			@RequestParam Long responsavelId,
-			@RequestParam LocalDate dataInicio
+			@RequestParam LocalDate dataInicio,
+			@AuthenticationPrincipal UsuarioPrincipal principal
 	) {
-		animalResponsavelService.excluir(animalId, responsavelId, dataInicio);
+		animalResponsavelService.excluir(animalId, responsavelId, dataInicio, principal);
 		return ResponseEntity.noContent().build();
 	}
 

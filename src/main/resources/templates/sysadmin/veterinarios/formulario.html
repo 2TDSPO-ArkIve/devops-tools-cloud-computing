@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<form class="form form-card" th:action="@{/sysadmin/veterinarios}" th:object="${veterinario}" method="post" novalidate>
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+				<div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Erro</div>
+
+				<section class="form-section" aria-labelledby="dados-veterinario-title">
+					<p class="section-label" id="dados-veterinario-title">Dados do veterinário</p>
+
+					<div class="field">
+						<label for="nome">Nome</label>
+						<input id="nome" type="text" th:field="*{nome}" th:attr="aria-invalid=${#fields.hasErrors('nome')}" required>
+						<span class="field-error" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="crmv">CRMV</label>
+						<input id="crmv" type="text" th:field="*{crmv}" th:attr="aria-invalid=${#fields.hasErrors('crmv')}" maxlength="10" required>
+						<span class="field-error" th:if="${#fields.hasErrors('crmv')}" th:errors="*{crmv}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="especialidade">Especialidade</label>
+						<input id="especialidade" type="text" th:field="*{especialidade}" th:attr="aria-invalid=${#fields.hasErrors('especialidade')}" maxlength="50">
+						<span class="field-error" th:if="${#fields.hasErrors('especialidade')}" th:errors="*{especialidade}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="email">E-mail</label>
+						<input id="email" type="email" th:field="*{email}" th:attr="aria-invalid=${#fields.hasErrors('email')}" maxlength="200" required>
+						<span class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="clinicaId">Clínica</label>
+						<select id="clinicaId" th:field="*{clinicaId}">
+							<option value="">Sem clínica</option>
+							<option th:each="clinica : ${clinicas}" th:value="${clinica.id}" th:text="${clinica.label}">Clínica</option>
+						</select>
+					</div>
+				</section>
+
+				<div class="form-actions">
+					<a class="button button-secondary" th:href="@{/sysadmin/veterinarios}">Cancelar</a>
+					<button class="button button-primary" type="submit">Cadastrar veterinário</button>
+				</div>
+			</form>
+		</main>
+	</div>
+</div>
+</body>
+</html>

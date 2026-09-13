@@ -10,7 +10,7 @@ public record VeterinarioRequest(
 		String nome,
 
 		@NotBlank
-		@Size(max = 20)
+		@Size(max = 10)
 		String crmv,
 
 		@Size(max = 50)

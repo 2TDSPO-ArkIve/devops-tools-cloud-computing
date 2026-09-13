@@ -1,0 +1,10 @@
+{
+  "ds_diagnostico": "Suspeita de Displasia Coxofemoral em Golden Retriever",
+  "tp_severidade": "MODERADA",
+  "ds_insight_ia": "Bilu e um cao macho Golden Retriever, castrado, de 4 anos, peso 28,1 kg, apresentando claudicacao intermitente na pata traseira.",
+  "pc_confianca": 65,
+  "fontes_pesquisadas": [
+    "https://source-one.example",
+    "https://source-two.example"
+  ]
+}

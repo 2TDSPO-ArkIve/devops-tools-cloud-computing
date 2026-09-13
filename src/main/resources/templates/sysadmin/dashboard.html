@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<section class="kpi-grid" aria-label="Indicadores globais">
+				<article class="kpi-card">
+					<p class="kpi-label">Clínicas ativas</p>
+					<strong th:text="${dashboard.clinicasAtivas}">0</strong>
+				</article>
+				<article class="kpi-card">
+					<p class="kpi-label">Veterinários ativos</p>
+					<strong th:text="${dashboard.veterinariosAtivos}">0</strong>
+				</article>
+				<article class="kpi-card">
+					<p class="kpi-label">Responsáveis ativos</p>
+					<strong th:text="${dashboard.responsaveisAtivos}">0</strong>
+				</article>
+				<article class="kpi-card">
+					<p class="kpi-label">Animais ativos</p>
+					<strong th:text="${dashboard.animaisAtivos}">0</strong>
+				</article>
+				<article class="kpi-card">
+					<p class="kpi-label">Consultas nos últimos 30 dias</p>
+					<strong th:text="${dashboard.consultasUltimos30Dias}">0</strong>
+				</article>
+				<article class="kpi-card">
+					<p class="kpi-label">Usuários ativos</p>
+					<strong th:text="${dashboard.usuariosAtivos}">0</strong>
+				</article>
+			</section>
+
+			<section class="analytics-grid" aria-label="Análises globais">
+				<article class="analytics-panel">
+					<header class="panel-header">
+						<h3>Consultas nos últimos 6 meses</h3>
+					</header>
+					<div class="empty-chart" th:unless="${dashboard.hasConsultasPorMes()}">
+						Não há consultas registradas neste período.
+					</div>
+					<div class="vertical-chart" th:if="${dashboard.hasConsultasPorMes()}">
+						<div class="vertical-bar" th:each="item : ${dashboard.consultasPorMes}">
+							<strong th:text="${item.value}">0</strong>
+							<div class="bar-track">
+								<span th:style="'height:' + ${item.percentage} + '%'"></span>
+							</div>
+							<small th:text="${item.label}">Mês</small>
+						</div>
+					</div>
+				</article>
+
+				<article class="analytics-panel">
+					<header class="panel-header">
+						<h3>Animais por espécie</h3>
+					</header>
+					<div class="empty-chart" th:unless="${dashboard.hasAnimaisPorEspecie()}">
+						Não há animais ativos para exibir.
+					</div>
+					<div class="bar-list" th:if="${dashboard.hasAnimaisPorEspecie()}">
+						<div class="bar-row" th:each="item : ${dashboard.animaisPorEspecie}">
+							<div class="bar-row-label">
+								<span th:text="${item.label}">Espécie</span>
+								<strong th:text="${item.value}">0</strong>
+							</div>
+							<div class="horizontal-track">
+								<span th:style="'width:' + ${item.percentage} + '%'"></span>
+							</div>
+						</div>
+					</div>
+				</article>
+
+				<article class="analytics-panel">
+					<header class="panel-header">
+						<h3>Usuários por perfil</h3>
+					</header>
+					<div class="empty-chart" th:unless="${dashboard.hasUsuariosPorPerfil()}">
+						Não há usuários cadastrados para exibir.
+					</div>
+					<div class="bar-list" th:if="${dashboard.hasUsuariosPorPerfil()}">
+						<div class="bar-row" th:each="item : ${dashboard.usuariosPorPerfil}">
+							<div class="bar-row-label">
+								<span th:text="${item.label}">Perfil</span>
+								<strong th:text="${item.value}">0</strong>
+							</div>
+							<div class="horizontal-track">
+								<span th:style="'width:' + ${item.percentage} + '%'"></span>
+							</div>
+						</div>
+					</div>
+				</article>
+
+				<article class="analytics-panel">
+					<header class="panel-header">
+						<h3>Consultas por status</h3>
+					</header>
+					<div class="empty-chart" th:unless="${dashboard.hasConsultasPorStatus()}">
+						Não há consultas por status para exibir.
+					</div>
+					<div class="bar-list" th:if="${dashboard.hasConsultasPorStatus()}">
+						<div class="bar-row" th:each="item : ${dashboard.consultasPorStatus}">
+							<div class="bar-row-label">
+								<span th:text="${item.label}">Status</span>
+								<strong th:text="${item.value}">0</strong>
+							</div>
+							<div class="horizontal-track">
+								<span th:style="'width:' + ${item.percentage} + '%'"></span>
+							</div>
+						</div>
+					</div>
+				</article>
+			</section>
+		</main>
+	</div>
+</div>
+</body>
+</html>

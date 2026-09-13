@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body class="login-page">
+<main class="login-shell">
+	<section class="login-panel" aria-labelledby="password-title">
+		<img class="login-logo" th:src="@{/images/definitive.png}" alt="ArkIve">
+
+		<div class="login-copy">
+			<p class="eyebrow" th:text="${forced} ? 'Primeiro acesso' : 'Alterar senha'">Alterar senha</p>
+			<h1 id="password-title" th:text="${forced} ? 'Defina uma nova senha' : 'Alterar senha'">Alterar senha</h1>
+			<p th:if="${forced}">Defina uma nova senha para continuar.</p>
+			<p th:unless="${forced}">Informe sua senha atual e escolha uma nova senha.</p>
+		</div>
+
+		<form class="form" th:action="@{/alterar-senha}" th:object="${senha}" method="post" novalidate>
+			<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+			<div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Erro</div>
+
+			<div th:unless="${forced}">
+				<label for="senhaAtual">Senha atual</label>
+				<input id="senhaAtual" type="password" th:field="*{senhaAtual}" autocomplete="current-password">
+			</div>
+
+			<label for="novaSenha">Nova senha</label>
+			<input id="novaSenha" type="password" th:field="*{novaSenha}" autocomplete="new-password" minlength="8" maxlength="72" required>
+			<span class="field-error" th:if="${#fields.hasErrors('novaSenha')}" th:errors="*{novaSenha}">Erro</span>
+
+			<label for="confirmarNovaSenha">Confirmar nova senha</label>
+			<input id="confirmarNovaSenha" type="password" th:field="*{confirmarNovaSenha}" autocomplete="new-password" minlength="8" maxlength="72" required>
+			<span class="field-error" th:if="${#fields.hasErrors('confirmarNovaSenha')}" th:errors="*{confirmarNovaSenha}">Erro</span>
+
+			<button class="button button-primary" type="submit">Salvar senha</button>
+		</form>
+	</section>
+</main>
+</body>
+</html>

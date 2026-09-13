@@ -22,7 +22,7 @@ public class Veterinario {
 	@Column(name = "NM_VETERINARIO", nullable = false, length = 50)
 	private String nome;
 
-	@Column(name = "DC_CRMV", nullable = false, length = 20, unique = true)
+	@Column(name = "DC_CRMV", nullable = false, length = 10, unique = true)
 	private String crmv;
 
 	@Column(name = "DS_ESPECIALIDADE", length = 50)

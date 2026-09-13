@@ -1,33 +1,27 @@
-FROM eclipse-temurin:17-jdk-jammy AS build
+FROM maven:3.9-eclipse-temurin-17 AS build
 
-WORKDIR /app
+WORKDIR /workspace
 
-COPY .mvn .mvn
-COPY mvnw pom.xml ./
+COPY pom.xml .
+RUN mvn -B -DskipTests dependency:go-offline
 
-RUN sed -i 's/\r$//' mvnw && chmod +x mvnw
-RUN ./mvnw -q -DskipTests dependency:go-offline
-
-COPY src src
-
-RUN ./mvnw -q clean package -DskipTests
-
+COPY src ./src
+RUN mvn -B -DskipTests package
 
 FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-RUN groupadd --system arkive \
-    && useradd --system --gid arkive --home-dir /app --shell /usr/sbin/nologin arkive
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends ffmpeg ca-certificates libasound2 libssl3 \
+	&& rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /app/target/*.jar app.jar
+RUN groupadd --system arkive && useradd --system --gid arkive arkive
 
-RUN chown -R arkive:arkive /app
+COPY --from=build /workspace/target/arkive-0.0.1-SNAPSHOT.jar /app/app.jar
 
 USER arkive
 
 EXPOSE 8080
-
-ENV SPRING_PROFILES_ACTIVE=oracle
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

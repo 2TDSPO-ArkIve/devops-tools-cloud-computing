@@ -3,7 +3,6 @@ package br.com.fiap.arkive.dto.request;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
@@ -20,7 +19,7 @@ public record FeedbackNpsRequest(
 
 		@NotNull
 		@Min(0)
-		@Max(10)
+		@Max(5)
 		Integer nota,
 
 		String comentario,

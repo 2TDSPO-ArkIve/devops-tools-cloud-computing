@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="topbar" th:fragment="header(pageTitle)">
+	<div class="topbar-title">
+		<p class="eyebrow" th:text="${roleLabel}">Perfil</p>
+		<h1 th:text="${pageTitle}">Visão Geral</h1>
+	</div>
+</header>
+</body>
+</html>

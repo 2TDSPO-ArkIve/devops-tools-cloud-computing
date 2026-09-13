@@ -19,7 +19,7 @@ public class Clinica {
 	@Column(name = "NM_CLINICA", nullable = false, length = 150)
 	private String nome;
 
-	@Column(name = "DC_CNPJ", nullable = false, length = 18, unique = true)
+	@Column(name = "DC_CNPJ", nullable = false, length = 14, unique = true)
 	private String cnpj;
 
 	@Column(name = "DS_ENDERECO", length = 255)

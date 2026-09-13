@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<main class="restricted-shell">
+	<section class="restricted-panel">
+		<img class="login-logo" th:src="@{/images/definitive.png}" alt="ArkIve">
+		<p class="eyebrow" th:text="${roleLabel}">Perfil</p>
+		<h1>Acesso web restrito</h1>
+		<p>
+			<span th:text="${displayName}">Usuário</span>, sua conta ArkIve está ativa, mas este ambiente web é destinado a funções administrativas.
+			Contas de Veterinário e Responsável serão atendidas pela experiência operacional e cliente em canais próprios.
+		</p>
+		<form th:action="@{/logout}" method="post">
+			<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+			<button class="button button-primary" type="submit">Sair</button>
+		</form>
+	</section>
+</main>
+</body>
+</html>

@@ -11,6 +11,7 @@ public record ResponsavelRequest(
 		@Size(max = 50)
 		String nome,
 
+		@NotBlank
 		@Size(max = 20)
 		String documento,
 

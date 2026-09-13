@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<body>
+<details th:fragment="cadastro" id="cadastro-raca">
+	<summary>Cadastrar ra&#231;a</summary>
+	<div class="field">
+		<label for="nova-raca-nome">Nome da ra&#231;a</label>
+		<input id="nova-raca-nome" type="text" maxlength="50">
+	</div>
+	<div class="field">
+		<label for="nova-raca-porte">Porte</label>
+		<select id="nova-raca-porte">
+			<option value="">N&#227;o informado</option>
+			<option value="PEQUENO">Pequeno</option>
+			<option value="MEDIO">M&#233;dio</option>
+			<option value="GRANDE">Grande</option>
+		</select>
+	</div>
+	<button class="button button-secondary" id="salvar-raca" type="button" disabled>Cadastrar ra&#231;a</button>
+	<p id="raca-mensagem" role="status" aria-live="polite"></p>
+</details>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<div class="page-actions page-actions-only">
+				<a class="button button-secondary" th:href="@{/admin/prescricoes}">Voltar</a>
+			</div>
+
+			<section class="detail-grid" aria-label="Detalhes da prescrição">
+				<article class="detail-card">
+					<p class="section-label">Tratamento</p>
+					<dl>
+						<div>
+							<dt>Medicamento</dt>
+							<dd th:text="${prescricao.medicamento}">Medicamento</dd>
+						</div>
+						<div>
+							<dt>Dosagem</dt>
+							<dd th:text="${prescricao.dosagem}">Dosagem</dd>
+						</div>
+						<div>
+							<dt>Frequência</dt>
+							<dd th:text="${prescricao.frequencia}">Frequência</dd>
+						</div>
+						<div>
+							<dt>Via</dt>
+							<dd th:text="${prescricao.viaAdministracao ?: '-'}">ORAL</dd>
+						</div>
+					</dl>
+				</article>
+
+				<article class="detail-card">
+					<p class="section-label">Período</p>
+					<dl>
+						<div>
+							<dt>Início</dt>
+							<dd th:text="${#temporals.format(prescricao.dataInicio, 'dd/MM/yyyy')}">01/01/2026</dd>
+						</div>
+						<div>
+							<dt>Fim</dt>
+							<dd th:text="${prescricao.dataFim == null ? 'Sem término' : #temporals.format(prescricao.dataFim, 'dd/MM/yyyy')}">Sem término</dd>
+						</div>
+						<div>
+							<dt>Consulta</dt>
+							<dd th:text="${prescricao.consultaId}">1</dd>
+						</div>
+						<div>
+							<dt>Instruções</dt>
+							<dd th:text="${prescricao.instrucoes ?: '-'}">Instruções</dd>
+						</div>
+					</dl>
+				</article>
+			</section>
+		</main>
+	</div>
+</div>
+</body>
+</html>

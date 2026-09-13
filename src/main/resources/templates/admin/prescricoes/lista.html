@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<div class="alert alert-error" th:if="${erro}" th:text="${erro}">Erro</div>
+
+			<section class="empty-state" th:if="${prescricoes.empty}">
+				<h3>Nenhuma prescrição encontrada.</h3>
+			</section>
+
+			<section class="table-card" th:unless="${prescricoes.empty}">
+				<table class="data-table">
+					<thead>
+					<tr>
+						<th>Medicamento</th>
+						<th>Dosagem</th>
+						<th>Frequência</th>
+						<th>Via</th>
+						<th>Período</th>
+						<th>Ações</th>
+					</tr>
+					</thead>
+					<tbody>
+					<tr th:each="prescricao : ${prescricoes.content}">
+						<td th:text="${prescricao.medicamento}">Medicamento</td>
+						<td th:text="${prescricao.dosagem}">Dosagem</td>
+						<td th:text="${prescricao.frequencia}">Frequência</td>
+						<td th:text="${prescricao.viaAdministracao ?: '-'}">ORAL</td>
+						<td>
+							<span th:text="${#temporals.format(prescricao.dataInicio, 'dd/MM/yyyy')}">01/01/2026</span>
+							<span> a </span>
+							<span th:text="${prescricao.dataFim == null ? 'sem término' : #temporals.format(prescricao.dataFim, 'dd/MM/yyyy')}">sem término</span>
+						</td>
+						<td>
+							<a class="button button-secondary button-small" th:href="@{/admin/prescricoes/{id}(id=${prescricao.id})}">Ver</a>
+						</td>
+					</tr>
+					</tbody>
+				</table>
+			</section>
+
+			<nav class="pagination" th:if="${prescricoes.totalPages > 1}" aria-label="Paginação">
+				<a class="button button-secondary" th:if="${prescricoes.hasPrevious()}" th:href="@{/admin/prescricoes(page=${prescricoes.number - 1})}">Anterior</a>
+				<span th:text="${prescricoes.number + 1} + ' de ' + ${prescricoes.totalPages}">1 de 1</span>
+				<a class="button button-secondary" th:if="${prescricoes.hasNext()}" th:href="@{/admin/prescricoes(page=${prescricoes.number + 1})}">Próxima</a>
+			</nav>
+		</main>
+	</div>
+</div>
+</body>
+</html>

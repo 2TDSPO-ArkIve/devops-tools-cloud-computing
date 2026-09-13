@@ -23,7 +23,7 @@ public record AvaliacaoBemEstarRequest(
 		BigDecimal peso,
 
 		@Positive
-		Integer idade,
+		BigDecimal idade,
 
 		@Size(max = 20)
 		String apetite,

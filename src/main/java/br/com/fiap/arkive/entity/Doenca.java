@@ -2,6 +2,8 @@ package br.com.fiap.arkive.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
@@ -11,10 +13,11 @@ import jakarta.persistence.Table;
 public class Doenca {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID_DOENCA")
 	private Long id;
 
-	@Column(name = "NM_DOENCA", nullable = false, length = 150)
+	@Column(name = "NM_DOENCA", nullable = false, length = 100)
 	private String nome;
 
 	@Column(name = "ID_CATEGORIA")

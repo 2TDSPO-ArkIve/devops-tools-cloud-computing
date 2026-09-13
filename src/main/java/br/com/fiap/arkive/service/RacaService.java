@@ -12,6 +12,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,7 +38,7 @@ public class RacaService {
 	public RacaResponse criar(RacaRequest request) {
 		Raca raca = new Raca();
 		aplicarDados(raca, request);
-		return RacaResponse.fromEntity(racaRepository.save(raca));
+		return salvar(raca);
 	}
 
 	@Transactional(readOnly = true)
@@ -56,7 +58,7 @@ public class RacaService {
 	public RacaResponse atualizar(Long id, RacaRequest request) {
 		Raca raca = buscarEntidade(id);
 		aplicarDados(raca, request);
-		return RacaResponse.fromEntity(racaRepository.save(raca));
+		return salvar(raca);
 	}
 
 	@Transactional
@@ -74,11 +76,32 @@ public class RacaService {
 	}
 
 	private void aplicarDados(Raca raca, RacaRequest request) {
+		if (request.especieId() == null) {
+			throw new BusinessException("Especie deve ser informada.");
+		}
+		String nome = request.nome() == null ? "" : request.nome().trim();
+		if (nome.isBlank() || nome.length() > 50) {
+			throw new BusinessException("Nome da raca deve ter entre 1 e 50 caracteres.");
+		}
 		validarPorte(request.porte());
 		Especie especie = especieService.buscarEntidade(request.especieId());
-		raca.setNome(request.nome());
-		raca.setPorte(request.porte());
+		if (!"S".equals(especie.getAtivo())) {
+			throw new BusinessException("Especie deve estar ativa.");
+		}
+		if (racaRepository.existeOutraComNome(especie.getId(), nome, raca.getId())) {
+			throw new BusinessException("Ja existe uma raca com este nome nesta especie.", HttpStatus.CONFLICT);
+		}
+		raca.setNome(nome);
+		raca.setPorte(vazioParaNulo(request.porte()));
 		raca.setEspecie(especie);
+	}
+
+	private RacaResponse salvar(Raca raca) {
+		try {
+			return RacaResponse.fromEntity(racaRepository.saveAndFlush(raca));
+		} catch (DataIntegrityViolationException ex) {
+			throw new BusinessException("Raca nao pode ser salva. Verifique a especie e se o nome ja foi cadastrado.", HttpStatus.CONFLICT);
+		}
 	}
 
 	private void validarPorte(String porte) {

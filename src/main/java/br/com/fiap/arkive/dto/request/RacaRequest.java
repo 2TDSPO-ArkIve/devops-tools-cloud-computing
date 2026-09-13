@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 public record RacaRequest(
 		@NotBlank
-		@Size(max = 100)
+		@Size(max = 50)
 		String nome,
 
 		@NotNull

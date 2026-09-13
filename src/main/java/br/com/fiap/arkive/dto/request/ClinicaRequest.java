@@ -10,7 +10,7 @@ public record ClinicaRequest(
 		String nome,
 
 		@NotBlank
-		@Size(max = 18)
+		@Size(max = 14)
 		String cnpj,
 
 		@Size(max = 255)

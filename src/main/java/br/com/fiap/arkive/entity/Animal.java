@@ -9,17 +9,29 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "TB_ARKIVE_ANIMAL")
 public class Animal {
+
+	@Column(name = "DT_NASCIMENTO")
+	private LocalDate dataNascimento;
+
+	public LocalDate getDataNascimento() {
+		return dataNascimento;
+	}
+
+	public void setDataNascimento(LocalDate dataNascimento) {
+		this.dataNascimento = dataNascimento;
+	}
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "ID_ANIMAL")
 	private Long id;
 
-	@Column(name = "NM_ANIMAL", nullable = false, length = 100)
+	@Column(name = "NM_ANIMAL", nullable = false, length = 50)
 	private String nome;
 
 	@Column(name = "DS_SEXO", columnDefinition = "CHAR(1)")
@@ -39,6 +51,10 @@ public class Animal {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ID_CLINICA")
 	private Clinica clinica;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "ID_VETERINARIO_CADASTRO")
+	private Veterinario veterinarioCadastro;
 
 	@Column(name = "ST_ATIVO", nullable = false, columnDefinition = "CHAR(1)")
 	private String ativo = "S";
@@ -97,6 +113,14 @@ public class Animal {
 
 	public void setClinica(Clinica clinica) {
 		this.clinica = clinica;
+	}
+
+	public Veterinario getVeterinarioCadastro() {
+		return veterinarioCadastro;
+	}
+
+	public void setVeterinarioCadastro(Veterinario veterinarioCadastro) {
+		this.veterinarioCadastro = veterinarioCadastro;
 	}
 
 	public String getAtivo() {

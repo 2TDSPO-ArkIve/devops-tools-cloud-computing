@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<form class="form form-card" th:action="@{/admin/animais}" th:object="${animal}" method="post" novalidate>
+				<input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+				<div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}" th:each="err : ${#fields.globalErrors()}" th:text="${err}">Erro</div>
+
+				<section class="form-section" aria-labelledby="dados-animal-title">
+					<p class="section-label" id="dados-animal-title">Dados do animal</p>
+
+					<div class="field">
+						<label for="nome">Nome</label>
+						<input id="nome" type="text" th:field="*{nome}" th:attr="aria-invalid=${#fields.hasErrors('nome')}" maxlength="50" required>
+						<span class="field-error" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="especieId">Espécie</label>
+						<select id="especieId" th:field="*{especieId}" th:attr="aria-invalid=${#fields.hasErrors('especieId')}" required>
+							<option value="">Selecione</option>
+							<option th:each="especie : ${especies}" th:value="${especie.id}" th:text="${especie.nome}">Espécie</option>
+						</select>
+						<span class="field-error" th:if="${#fields.hasErrors('especieId')}" th:errors="*{especieId}">Erro</span>
+					</div>
+
+					<div class="field">
+						<label for="racaId">Raça</label>
+						<select id="racaId" th:field="*{racaId}" th:disabled="${animal.especieId == null}">
+							<option value="">Sem raça informada</option>
+							<option th:each="raca : ${racas}" th:value="${raca.id}" th:text="${raca.nome + ' — ' + raca.especieNome}">Raça</option>
+						</select>
+					</div>
+
+					<div class="field">
+						<div th:replace="~{fragments/raca-inline :: cadastro}"></div>
+						<label for="sexo">Sexo</label>
+						<select id="sexo" th:field="*{sexo}">
+							<option value="">Não informado</option>
+							<option value="M">Macho</option>
+							<option value="F">Fêmea</option>
+						</select>
+					</div>
+
+					<div class="field">
+						<label for="castrado">Castrado</label>
+						<select id="castrado" th:field="*{castrado}">
+							<option value="N">Não</option>
+							<option value="S">Sim</option>
+						</select>
+					</div>
+
+					<div class="field" th:if="${sysadmin}">
+						<label for="clinicaId">Clínica</label>
+						<select id="clinicaId" th:field="*{clinicaId}">
+							<option value="">Sem clínica</option>
+							<option th:each="clinica : ${clinicas}" th:value="${clinica.id}" th:text="${clinica.nome}">Clínica</option>
+						</select>
+					</div>
+
+					<div class="field" th:if="${adminClinica}">
+						<label for="clinica-atual">Clínica</label>
+						<input id="clinica-atual" type="text" th:value="${clinicaAutenticada != null ? clinicaAutenticada.nome : 'Clínica autenticada'}" disabled>
+					</div>
+
+					<div class="field">
+						<label for="ativo">Status</label>
+						<select id="ativo" th:field="*{ativo}">
+							<option value="S">Ativo</option>
+							<option value="N">Inativo</option>
+						</select>
+					</div>
+				</section>
+
+				<div class="form-actions">
+					<a class="button button-secondary" th:href="@{/admin/animais}">Cancelar</a>
+					<button class="button button-primary" type="submit">Cadastrar animal</button>
+				</div>
+			</form>
+		</main>
+	</div>
+</div>
+<script th:src="@{/js/animal-racas.js}" defer></script>
+</body>
+</html>

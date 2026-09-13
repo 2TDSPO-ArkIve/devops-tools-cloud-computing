@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head(${pageTitle})}"></head>
+<body>
+<div class="app-shell">
+	<aside th:replace="~{fragments/sidebar :: sidebar}"></aside>
+	<div class="app-content">
+		<header th:replace="~{fragments/header :: header(${pageTitle})}"></header>
+		<main class="main-content">
+			<div class="page-actions page-actions-only">
+				<a class="button button-secondary" th:href="@{/admin/adesoes}">Voltar</a>
+			</div>
+
+			<section class="detail-grid" aria-label="Detalhes da adesão">
+				<article class="detail-card">
+					<p class="section-label">Registro</p>
+					<dl>
+						<div>
+							<dt>Data</dt>
+							<dd th:text="${#temporals.format(adesao.dataRegistro, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</dd>
+						</div>
+						<div>
+							<dt>Prescrição</dt>
+							<dd th:text="${adesao.prescricaoId}">1</dd>
+						</div>
+						<div>
+							<dt>Tomou</dt>
+							<dd>
+								<span class="status-badge status-success" th:if="${adesao.tomou == 'S'}">Sim</span>
+								<span class="status-badge status-warning" th:if="${adesao.tomou == 'N'}">Não</span>
+							</dd>
+						</div>
+						<div>
+							<dt>Observação</dt>
+							<dd th:text="${adesao.observacao ?: '-'}">Observação</dd>
+						</div>
+					</dl>
+				</article>
+
+				<article class="detail-card">
+					<p class="section-label">Vínculos</p>
+					<dl>
+						<div>
+							<dt>Animal</dt>
+							<dd th:text="${adesao.animalNome}">Animal</dd>
+						</div>
+						<div>
+							<dt>Responsável</dt>
+							<dd th:text="${adesao.responsavelNome ?: '-'}">Responsável</dd>
+						</div>
+					</dl>
+				</article>
+			</section>
+		</main>
+	</div>
+</div>
+</body>
+</html>

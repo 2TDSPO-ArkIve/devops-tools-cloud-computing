@@ -42,11 +42,11 @@ public class AvaliacaoBemEstar {
 	@Column(name = "DT_AVALIACAO", nullable = false)
 	private LocalDateTime dataAvaliacao = LocalDateTime.now();
 
-	@Column(name = "KG_PESO", precision = 5, scale = 2)
+	@Column(name = "KG_PESO", precision = 6, scale = 2)
 	private BigDecimal peso;
 
-	@Column(name = "NR_IDADE")
-	private Integer idade;
+	@Column(name = "NR_IDADE", precision = 5, scale = 2)
+	private BigDecimal idade;
 
 	@Column(name = "DS_APETITE", length = 20)
 	private String apetite;
@@ -117,11 +117,11 @@ public class AvaliacaoBemEstar {
 		this.peso = peso;
 	}
 
-	public Integer getIdade() {
+	public BigDecimal getIdade() {
 		return idade;
 	}
 
-	public void setIdade(Integer idade) {
+	public void setIdade(BigDecimal idade) {
 		this.idade = idade;
 	}
 
