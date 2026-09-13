@@ -37,3 +37,4 @@ build/
 .env.*
 !.env.example
 application-*.local.properties
+scripts/env.local.sh
