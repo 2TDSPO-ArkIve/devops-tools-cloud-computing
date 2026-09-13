@@ -40,7 +40,7 @@ Comunicação entre os componentes:
 
 Diagrama de infraestrutura Azure:
 
-![Arquitetura Azure do ArkIve](docs/images/arquitetura-azure.png)
+![Arquitetura Azure do ArkIve](docs/images/arkive-arquitetura-azure.png)
 
 ## Tecnologias Utilizadas
 
