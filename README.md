@@ -83,23 +83,30 @@ URL pública do App Service
 
 ## CRUD Avaliado
 
-A demonstração final usou **Clínica** e **Veterinário** como o par de entidades CORE relacionadas (`TB_ARKIVE_VETERINARIO.ID_CLINICA` referencia `TB_ARKIVE_CLINICA.ID_CLINICA`), com dois registros significativos criados para cada uma.
+A demonstração final usou **Clínica** e **Veterinário** como o par de entidades CORE relacionadas (`TB_ARKIVE_VETERINARIO.ID_CLINICA` referencia `TB_ARKIVE_CLINICA.ID_CLINICA`), com **dois registros significativos criados para cada tabela**.
 
-Roteiro efetivamente demonstrado (endpoints administrativos de `SYSADMIN`):
+O CRUD foi demonstrado integralmente pela interface administrativa Thymeleaf:
 
-- **CREATE**: cadastro de uma clínica e, em seguida, de um veterinário vinculado a ela;
-- **READ**: consulta das listagens e detalhes de clínica e veterinário;
-- **UPDATE**: alteração de dados cadastrais de clínica e de veterinário;
-- **DELETE lógico**: exclusão de clínica e de veterinário via `ST_ATIVO = 'N'` — **não** há remoção física de linha para essas duas tabelas (`ClinicaService.excluir` e `VeterinarioService.excluir` fazem `UPDATE ... SET ST_ATIVO = 'N'`, preservando o histórico).
+- **CREATE — Clínica**: cadastro de duas clínicas, **Clínica ArkIve Paulista** e **Clínica ArkIve Moema**;
+- **READ — Clínica**: consulta das clínicas pela listagem administrativa, evidenciando os registros persistidos pela aplicação;
+- **UPDATE — Clínica**: alteração dos dados cadastrais da Clínica ArkIve Paulista e confirmação da atualização pela própria interface;
+- **DELETE lógico — Clínica**: desativação da Clínica ArkIve Moema, preservando a linha no banco com `ST_ATIVO = 'N'`;
+- **CREATE — Veterinário**: cadastro de **Fernanda Vieira**, vinculada à Clínica ArkIve Paulista, e **Lucas Mendes**, vinculado à Clínica ArkIve Moema;
+- **READ — Veterinário**: consulta dos veterinários pela listagem administrativa, incluindo seus respectivos vínculos com as clínicas;
+- **UPDATE — Veterinário**: alteração dos dados profissionais de Fernanda Vieira e confirmação da atualização pela interface;
+- **DELETE lógico — Veterinário**: desativação de Lucas Mendes, preservando a linha no banco com `ST_ATIVO = 'N'`.
 
-Cada operação foi conferida com `SELECT` direto no Azure SQL Database, confirmando a persistência real na nuvem.
+As listagens Thymeleaf foram utilizadas durante o fluxo para evidenciar imediatamente os registros criados e alterados. Ao final da demonstração, consultas `SELECT` executadas diretamente no Azure SQL Database confirmaram o estado persistido das tabelas `TB_ARKIVE_CLINICA` e `TB_ARKIVE_VETERINARIO`, incluindo os registros ativos e os registros submetidos à exclusão lógica.
 
 Comportamento adicional demonstrado, decorrente do modelo de acesso:
 
 - ao cadastrar uma clínica, a aplicação provisiona automaticamente a conta de acesso `ADMIN_CLINICA` correspondente (`AccountProvisioningService`);
-- ao cadastrar um veterinário, a aplicação provisiona automaticamente a conta de acesso do próprio veterinário, da mesma forma;
-- a separação de perfis do Spring Security entre `SYSADMIN` (administração global) e `ADMIN_CLINICA` (escopo restrito à própria clínica) foi demonstrada durante o roteiro.
-
+  
+- ao cadastrar um veterinário, a aplicação provisiona automaticamente a conta de acesso do próprio veterinário;
+  
+- a relação entre Veterinário e Clínica é persistida por `TB_ARKIVE_VETERINARIO.ID_CLINICA`;
+  
+- a separação de perfis do Spring Security entre `SYSADMIN` e `ADMIN_CLINICA` também foi demonstrada, incluindo o primeiro acesso da conta administrativa da clínica e a restrição de acesso às rotas exclusivas de `SYSADMIN`.
 ## Pré-requisitos
 
 - JDK 17 disponível em `JAVA_HOME` ou no `PATH`;
@@ -256,22 +263,6 @@ Após o deploy, a aplicação fica disponível em:
 ```text
 https://webapp-arkive-rm561408.azurewebsites.net
 ```
-
-## Validação da Aplicação e Persistência
-
-Roteiro seguido na demonstração/gravação, para o par CORE Clínica + Veterinário (ver [CRUD Avaliado](#crud-avaliado)):
-
-1. acessar a URL pública do App Service e autenticar como `SYSADMIN`;
-2. **CREATE**: cadastrar uma clínica;
-3. verificar com `SELECT` diretamente no Azure SQL que a clínica foi persistida em `TB_ARKIVE_CLINICA`;
-4. **READ**: consultar a clínica pela aplicação;
-5. **UPDATE**: alterar um campo cadastral da clínica pela aplicação;
-6. verificar com `SELECT` diretamente no Azure SQL que a alteração foi persistida;
-7. **DELETE lógico**: excluir a clínica pela aplicação;
-8. verificar com `SELECT` diretamente no Azure SQL que o resultado é `ST_ATIVO = 'N'` (a linha permanece na tabela; não há remoção física);
-9. repetir os passos 2–8 para Veterinário (`TB_ARKIVE_VETERINARIO`), cadastrando-o vinculado à clínica criada;
-10. confirmar que clínica e veterinário criados provisionaram automaticamente suas contas de acesso (`ADMIN_CLINICA` e do próprio veterinário, respectivamente) e que a separação de perfis `SYSADMIN`/`ADMIN_CLINICA` se aplica;
-11. garantir que pelo menos dois registros significativos foram demonstrados em cada tabela.
 
 ## Exclusão dos Recursos
 
